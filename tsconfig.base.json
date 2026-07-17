@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2023",
+<<<<<<< HEAD
 
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
@@ -22,6 +23,20 @@
 
     "forceConsistentCasingInFileNames": true,
 
+=======
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+>>>>>>> feat-domain
     "types": ["node"]
   }
 }

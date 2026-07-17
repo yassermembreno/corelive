@@ -19,8 +19,6 @@ export interface GraphNode<TMetadata = unknown> {
 
 }
 
-
-
 export interface NodeLocation {
 
   filePath:string;
