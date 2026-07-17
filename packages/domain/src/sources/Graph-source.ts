@@ -1,4 +1,4 @@
-export enum KnowledgeSource {
+export enum GraphSource {
 
     GRAPHIFY = 'GRAPHIFY',
    
@@ -10,4 +10,4 @@ export enum KnowledgeSource {
    
     MANUAL = 'MANUAL'
    
-   }
+}

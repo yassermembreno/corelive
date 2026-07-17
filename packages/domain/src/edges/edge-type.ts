@@ -24,5 +24,17 @@ export enum EdgeType {
 
   MODIFIED_BY = 'MODIFIED_BY',
 
-  RELATED_TO = 'RELATED_TO'
+  RELATED_TO = 'RELATED_TO',
+
+  USES = 'USES',
+
+  READS = 'READS',
+
+  WRITES = 'WRITES',
+
+  EMITS = 'EMITS',
+
+  SUBSCRIBES = 'SUBSCRIBES',
+
+  DOCUMENTS = 'DOCUMENTS'
 }
