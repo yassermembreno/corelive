@@ -2,7 +2,6 @@ import type { Evidence } from "../evidence/evidence.js";
 import type { NodeId } from "../ids/node-id.js";
 import type { NodeType } from "./node-type.js";
 
-
 export interface GraphNode<TMetadata = unknown> {
 
   id: NodeId;
@@ -18,8 +17,6 @@ export interface GraphNode<TMetadata = unknown> {
   evidence: Evidence[];
 
 }
-
-
 
 export interface NodeLocation {
 
