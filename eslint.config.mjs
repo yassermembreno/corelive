@@ -19,8 +19,6 @@ export default tseslint.config(
       '**/.turbo/**',
       '**/coverage/**',
       'pnpm-lock.yaml',
-      // Parser package is incomplete (no package.json / src); ignore until restored
-      'packages/parser/**',
     ],
   },
   js.configs.recommended,

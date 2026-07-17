@@ -1,11 +1,6 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-<<<<<<< HEAD
-    "noEmit": true
-  },
-  "include": []
-=======
     "noEmit": true,
     "allowJs": true,
     "checkJs": true,
@@ -13,5 +8,4 @@
   },
   "include": ["eslint.config.mjs"],
   "exclude": ["node_modules", "**/dist/**"]
->>>>>>> feat-domain
 }
