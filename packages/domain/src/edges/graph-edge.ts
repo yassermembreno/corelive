@@ -1,7 +1,7 @@
-import { Evidence } from "../evidence/evidence.js";
-import { NodeId } from "../ids/node-id.js";
-import { EdgeId } from "../ids/edge-id.js";
-import { EdgeType } from "./edge-type.js";
+import type { Evidence } from "../evidence/evidence.js";
+import type { NodeId } from "../ids/node-id.js";
+import type { EdgeId } from "../ids/edge-id.js";
+import type { EdgeType } from "./edge-type.js";
 export interface GraphEdge<TMetadata = unknown> {
 
   id: EdgeId;

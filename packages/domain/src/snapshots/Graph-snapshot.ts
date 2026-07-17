@@ -1,7 +1,7 @@
-import { GraphEdge } from "../edges/graph-edge.js";
-import { SnapshotId } from "../ids/snapshot-id.js";
-import { GraphNode } from "../nodes/graph-node.js";
-import { GraphSource } from "../sources/Graph-source.js";
+import type { GraphEdge } from "../edges/graph-edge.js";
+import type { SnapshotId } from "../ids/snapshot-id.js";
+import type { GraphNode } from "../nodes/graph-node.js";
+import type { GraphSource } from "../sources/Graph-source.js";
 
 export interface GraphSnapshot {
 

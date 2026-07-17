@@ -1,4 +1,4 @@
-import { EvidenceId } from "../ids/evidence-id.js";
+import type { EvidenceId } from "../ids/evidence-id.js";
 
 export interface Evidence {
 

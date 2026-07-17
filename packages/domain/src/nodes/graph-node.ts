@@ -1,6 +1,6 @@
-import { Evidence } from "../evidence/evidence.js";
-import { NodeId } from "../ids/node-id.js";
-import { NodeType } from "./node-type.js";
+import type { Evidence } from "../evidence/evidence.js";
+import type { NodeId } from "../ids/node-id.js";
+import type { NodeType } from "./node-type.js";
 
 
 export interface GraphNode<TMetadata = unknown> {
