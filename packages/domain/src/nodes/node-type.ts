@@ -1,0 +1,84 @@
+/**
+ * Represents the kinds of entities
+ * CoreLive can understand.
+ *
+ * This is the vocabulary of the
+ * software knowledge model.
+ */
+export enum NodeType {
+  // Filesystem
+  FILE = 'FILE',
+  DIRECTORY = 'DIRECTORY',
+
+  // Code
+  PACKAGE = 'PACKAGE',
+  MODULE = 'MODULE',
+  CLASS = 'CLASS',
+  INTERFACE = 'INTERFACE',
+  ENUM = 'ENUM',
+  FUNCTION = 'FUNCTION',
+  METHOD = 'METHOD',
+  VARIABLE = 'VARIABLE',
+  CONSTANT = 'CONSTANT',
+
+  // API
+  API = 'API',
+  ENDPOINT = 'ENDPOINT',
+  DTO = 'DTO',
+  SCHEMA = 'SCHEMA',
+
+  // Domain
+  DOMAIN = 'DOMAIN',
+  AGGREGATE = 'AGGREGATE',
+  ENTITY = 'ENTITY',
+  VALUE_OBJECT = 'VALUE_OBJECT',
+  DOMAIN_SERVICE = 'DOMAIN_SERVICE',
+  REPOSITORY = 'REPOSITORY',
+  FACTORY = 'FACTORY',
+  SPECIFICATION = 'SPECIFICATION',
+
+  // Messaging & Events
+  EVENT = 'EVENT',
+  DOMAIN_EVENT = 'DOMAIN_EVENT',
+  INTEGRATION_EVENT = 'INTEGRATION_EVENT',
+  COMMAND = 'COMMAND',
+  QUERY = 'QUERY',  
+
+  // Persistence
+  DATABASE = 'DATABASE',
+  DATABASE_TABLE = 'DATABASE_TABLE',
+  VIEW = 'VIEW',
+  COLLECTION = 'COLLECTION',
+  INDEX = 'INDEX',
+
+  // Documentation
+  DOCUMENT = 'DOCUMENT',
+  README = 'README',
+  ADR = 'ADR',
+  RFC = 'RFC',
+  SPECIFICATION_DOCUMENT = 'SPECIFICATION_DOCUMENT',
+
+  // Testing
+  TEST = 'TEST',
+  TEST_SUITE = 'TEST_SUITE',
+  TEST_CASE = 'TEST_CASE',
+
+  // Infrastructure
+  SERVICE = 'SERVICE',
+  CONTAINER = 'CONTAINER',
+  QUEUE = 'QUEUE',
+  TOPIC = 'TOPIC',
+  CACHE = 'CACHE',
+  BUCKET = 'BUCKET',
+  SECRET = 'SECRET',
+
+  // AI
+  AGENT = 'AGENT',
+  TOOL = 'TOOL',
+  PROMPT = 'PROMPT',
+  MCP_SERVER = 'MCP_SERVER',
+
+  CONFIGURATION = 'CONFIGURATION',
+  EXTERNAL_SERVICE = 'EXTERNAL_SERVICE',
+  UNKNOWN = 'UNKNOWN',
+}
