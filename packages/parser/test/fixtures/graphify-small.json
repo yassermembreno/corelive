@@ -1,0 +1,22 @@
+{
+    "directed": true,
+    "multigraph": false,
+    "graph": {},
+    "nodes": [
+      {
+        "id": "controller",
+        "label": "PublicController"
+      },
+      {
+        "id": "service",
+        "label": "PublicReservationService"
+      }
+    ],
+    "edges": [
+      {
+        "source": "controller",
+        "target": "service",
+        "relation": "calls"
+      }
+    ]
+  }

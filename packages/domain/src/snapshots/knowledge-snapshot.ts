@@ -3,7 +3,7 @@ import type { SnapshotId } from "../ids/snapshot-id.js";
 import type { GraphNode } from "../nodes/graph-node.js";
 import type { GraphSource } from "../sources/Graph-source.js";
 
-export interface GraphSnapshot {
+export interface KnowledgeSnapshot {
 
     id:SnapshotId;
   
@@ -13,6 +13,5 @@ export interface GraphSnapshot {
   
     edges: GraphEdge[];
   
-    source: GraphSource;
-  
+    source: GraphSource;  
   }
