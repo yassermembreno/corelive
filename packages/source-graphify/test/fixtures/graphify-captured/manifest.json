@@ -1,0 +1,17 @@
+{
+  "package.json": {
+    "mtime": 1788803765.1492963,
+    "ast_hash": "2345a9833d918461f667ddacf571212e",
+    "semantic_hash": "2345a9833d918461f667ddacf571212e"
+  },
+  "src/controller.ts": {
+    "mtime": 1788803765.143974,
+    "ast_hash": "d9d2f638c60cf859d5ed324286cb73cc",
+    "semantic_hash": "d9d2f638c60cf859d5ed324286cb73cc"
+  },
+  "src/service.ts": {
+    "mtime": 1788803765.146298,
+    "ast_hash": "c2b79353a9b1f21d92c94452fca0c87e",
+    "semantic_hash": "c2b79353a9b1f21d92c94452fca0c87e"
+  }
+}

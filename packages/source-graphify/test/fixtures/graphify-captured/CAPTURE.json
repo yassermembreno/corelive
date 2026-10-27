@@ -1,0 +1,55 @@
+{
+  "graphifyy_version": "0.9.16",
+  "argv": [
+    "extract",
+    "<absRepo>",
+    "--code-only",
+    "--no-cluster",
+    "--out",
+    "<coreliveDir>"
+  ],
+  "output_layout": "<coreliveDir>/graphify-out/graph.json",
+  "node_count": 11,
+  "edge_count": 12,
+  "top_level_keys": [
+    "edges",
+    "hyperedges",
+    "input_tokens",
+    "nodes",
+    "output_tokens"
+  ],
+  "node_keys_observed": [
+    "_origin",
+    "file_type",
+    "id",
+    "label",
+    "source_file",
+    "source_location"
+  ],
+  "edge_keys_observed": [
+    "_origin",
+    "confidence",
+    "confidence_score",
+    "context",
+    "relation",
+    "source",
+    "source_file",
+    "source_location",
+    "target",
+    "weight"
+  ],
+  "relations_observed": [
+    "calls",
+    "contains",
+    "imports",
+    "imports_from",
+    "method",
+    "references"
+  ],
+  "notes": [
+    "extract does not accept --no-viz; --no-cluster produced no HTML",
+    "source_file paths are relative to the output directory, not the repo root",
+    "node ids may embed absolute machine path segments",
+    "uses 'edges' not 'links'; no directed/multigraph envelope"
+  ]
+}

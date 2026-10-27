@@ -4,396 +4,70 @@
 
 CoreLive transforms source code repositories into a structured, queryable model of software knowledge.
 
-Instead of treating a repository as a collection of files, CoreLive builds a **living representation of the system**: its architecture, dependencies, execution flows, concepts, and evolution.
+## Status
 
-The goal is to enable humans and AI agents to understand, analyze, and reason about any software system.
+Phase 0 — **Graphify-native** indexing (in progress / vertical slice).
 
----
+Graphify is the extraction engine. CoreLive governs it, validates output, maps to `KnowledgeSnapshot`, and persists atomically to SQLite.
 
-## The Problem
-
-Modern software systems are difficult to understand.
-
-A repository contains:
-
-- thousands of files
-- implicit architectural decisions
-- hidden dependencies
-- undocumented business rules
-- historical context
-
-Traditional tools answer questions about code files.
-
-CoreLive aims to answer questions about the **system itself**.
-
-Examples:
-
-- How does this feature work?
-- What depends on this module?
-- What breaks if I change this service?
-- Where are architectural boundaries violated?
-- How did the architecture evolve?
-
----
-
-
-
-# Vision
-
-CoreLive is building a **Digital Twin of software systems**.
-
-The repository is transformed into a knowledge model:
-
-```
-Repository
-
-      ↓
-
-CoreLive Engine
-
-      ↓
-
-Software Knowledge Model
-
-      ↓
-
-Human & AI Reasoning
+```text
+repository → Graphify (pinned) → validated graph.json → KnowledgeSnapshot → SQLite
 ```
 
-The model becomes the source of truth for:
-
-- architecture analysis
-- impact analysis
-- documentation generation
-- AI-assisted engineering
-- software evolution understanding
-
----
-
-
-
-# Core Principles
-
-
-
-## Evidence First
-
-CoreLive does not rely on AI guesses.
-
-Every answer should be backed by evidence from:
-
-- source code
-- dependency graphs
-- execution paths
-- documentation
-- repository history
-
----
-
-
-
-## Core Before AI
-
-The intelligence comes from the knowledge model.
-
-LLMs and agents are consumers of CoreLive, not the foundation.
-
-```
-Repository
-
-↓
-
-Knowledge Model
-
-↓
-
-Agents
-
-↓
-
-LLM
-```
-
----
-
-
-
-## Language Agnostic
-
-CoreLive should understand multiple ecosystems.
-
-Initial targets:
-
-- TypeScript
-- JavaScript
-- Python
-- Java
-- Go
-
-Language support is implemented through parser plugins.
-
----
-
-
-
-# Architecture
-
-```
-                         Repository
-
-                              |
-
-                              v
-
-                         Parser Layer
-
-                              |
-
-                              v
-
-                        Domain Model
-
-                              |
-
-                              v
-
-                       Knowledge Graph
-
-                              |
-
-             +----------------+----------------+
-
-             |                                 |
-
-             v                                 v
-
-      Semantic Knowledge              Reasoning Engine
-
-             |                                 |
-
-             +----------------+----------------+
-
-                              |
-
-                              v
-
-                          AI Agents
-
-                              |
-
-                              v
-
-                             LLM
-```
-
----
-
-
-
-# Monorepo Structure
-
-```
-corelive/
-
-├── apps/
-
-│   ├── api/          # Hono API
-
-│   ├── cli/          # CoreLive CLI
-
-│   └── dashboard/    # React visualization
-
-│
-
-├── packages/
-
-│   ├── engine/       # Pipeline orchestration
-
-│   ├── parser/       # Tree-sitter + language plugins
-
-│   ├── graph/        # Knowledge graph engine
-
-│   ├── knowledge/    # Semantic index and documents
-
-│   ├── planner/      # Evidence planner
-
-│   ├── agents/       # AI agents
-
-│   ├── mcp/          # MCP server
-
-│   ├── storage/      # Persistence adapters
-
-│   ├── domain/       # CoreLive concepts
-
-│   └── shared/       # Shared contracts
-
-```
-
----
-
-
-
-# Current Status
-
-🚧 Early development
-
-Current focus:
-
-- [x] Monorepo foundation
-- [ ] Domain model
-- [ ] Repository indexing
-- [ ] AST extraction
-- [ ] Knowledge graph
-- [ ] Query engine
-- [ ] AI reasoning layer
-
----
-
-
-
-# Roadmap
-
-
-
-## Phase 1 — Core Engine
-
-Build the foundation.
-
-Capabilities:
-
-- repository indexing
-- file discovery
-- symbol extraction
-- graph creation
-
----
-
-
-
-## Phase 2 — Knowledge Graph
-
-Create the software model.
-
-Support:
-
-- nodes
-- relationships
-- traversal
-- dependency analysis
-
----
-
-
-
-## Phase 3 — Reasoning Engine
-
-Allow CoreLive to answer questions.
-
-Examples:
-
-```
-Who calls PaymentService?
-
-Explain checkout flow.
-
-What depends on Customer?
-```
-
----
-
-
-
-## Phase 4 — AI Agents
-
-Specialized agents:
-
-- Architecture Agent
-- Impact Analysis Agent
-- Documentation Agent
-- Security Agent
-
----
-
-
-
-## Phase 5 — Living Software Model
-
-Connect software evolution:
-
-- Git history
-- pull requests
-- runtime signals
-- architecture changes
-
----
-
-
-
-# Development
-
-
+### Done
+
+- [x] Monorepo foundation (pnpm + Turbo)
+- [x] Domain model (`@corelive/domain`)
+- [x] Graphify boundary freeze (`graphifyy==0.9.16`)
+- [x] SourceIdentity + content fingerprint
+- [x] Graphify schema/mapper/snapshot validators
+- [x] GraphifyRunner + GraphifySourceIndexer
+- [x] IndexRepository + IndexOutcome
+- [x] SQLite GraphRepository (atomic + UNIQUE)
+- [x] CLI: `corelive doctor | setup | index`
+
+### Next
+
+- [ ] Deterministic graph queries (who-calls, dependents, path)
+- [ ] Dashboard / API surfaces
+- [ ] Additional sources (Git, OpenAPI, runtime)
 
 ## Requirements
 
 - Node.js >= 22
 - pnpm >= 9
-
----
-
-
+- [uv](https://docs.astral.sh/uv/) (for Graphify install)
+- Graphify via `corelive setup` (`graphifyy==0.9.16`)
 
 ## Install
 
 ```bash
-git clone <repository>
-
-cd corelive
-
 pnpm install
+pnpm --filter @corelive/cli exec tsx src/cli.ts setup
+pnpm --filter @corelive/cli exec tsx src/cli.ts doctor
 ```
 
----
-
-
-
-## Run development
+## Index a repository
 
 ```bash
-pnpm dev
+pnpm --filter @corelive/cli exec tsx src/cli.ts index /path/to/repo
 ```
 
----
+Snapshots are stored under `~/.corelive/corelive.sqlite` (override with `CORELIVE_DATA_DIR`).
 
+## Packages
 
-
-# Future Vision
-
-CoreLive aims to become an intelligence layer for software engineering.
-
-A future where developers and AI agents do not need to rediscover a codebase every time.
-
-Instead:
-
-```
-Repository
-
-↓
-
-CoreLive
-
-↓
-
-Understanding
-
-↓
-
-Better Decisions
+```text
+packages/
+  domain/              # KnowledgeSnapshot, GraphNode, GraphEdge, SourceIdentity
+  core-engine/         # IndexRepository, ports, fingerprint, Result
+  source-graphify/     # Graphify runner, validators, mappers, indexer
+  storage-sqlite/      # SqliteGraphRepository
+apps/
+  cli/                 # corelive doctor | setup | index
+  api/                 # Hono stub
 ```
 
----
-
-
-
-# License
+## License
 
 TBD

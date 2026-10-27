@@ -1,0 +1,222 @@
+{
+  "nodes": [
+    {
+      "id": "ext_mini_repo_package_json",
+      "label": "package.json",
+      "file_type": "code",
+      "source_file": "../mini-repo/package.json",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_package_name",
+      "label": "name",
+      "file_type": "code",
+      "source_file": "../mini-repo/package.json",
+      "source_location": "L2",
+      "_origin": "ast"
+    },
+    {
+      "id": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_package_type",
+      "label": "type",
+      "file_type": "code",
+      "source_file": "../mini-repo/package.json",
+      "source_location": "L3",
+      "_origin": "ast"
+    },
+    {
+      "id": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_package_private",
+      "label": "private",
+      "file_type": "code",
+      "source_file": "../mini-repo/package.json",
+      "source_location": "L4",
+      "_origin": "ast"
+    },
+    {
+      "id": "ext_mini_repo_src_controller_ts",
+      "label": "controller.ts",
+      "file_type": "code",
+      "source_file": "../mini-repo/src/controller.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_controller_publiccontroller",
+      "label": "PublicController",
+      "file_type": "code",
+      "source_file": "../mini-repo/src/controller.ts",
+      "source_location": "L3",
+      "_origin": "ast"
+    },
+    {
+      "id": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_controller_publiccontroller_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": "../mini-repo/src/controller.ts",
+      "source_location": "L4",
+      "_origin": "ast"
+    },
+    {
+      "id": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_controller_publiccontroller_create",
+      "label": ".create()",
+      "file_type": "code",
+      "source_file": "../mini-repo/src/controller.ts",
+      "source_location": "L6",
+      "_origin": "ast"
+    },
+    {
+      "id": "ext_mini_repo_src_service_ts",
+      "label": "service.ts",
+      "file_type": "code",
+      "source_file": "../mini-repo/src/service.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_service_publicreservationservice",
+      "label": "PublicReservationService",
+      "file_type": "code",
+      "source_file": "../mini-repo/src/service.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_service_publicreservationservice_reserve",
+      "label": ".reserve()",
+      "file_type": "code",
+      "source_file": "../mini-repo/src/service.ts",
+      "source_location": "L2",
+      "_origin": "ast"
+    }
+  ],
+  "edges": [
+    {
+      "source": "ext_mini_repo_package_json",
+      "target": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_package_name",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "../mini-repo/package.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_mini_repo_package_json",
+      "target": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_package_type",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "../mini-repo/package.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_mini_repo_package_json",
+      "target": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_package_private",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "../mini-repo/package.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_mini_repo_src_controller_ts",
+      "target": "ext_mini_repo_src_service_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "../mini-repo/src/controller.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_mini_repo_src_controller_ts",
+      "target": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_service_publicreservationservice",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "../mini-repo/src/controller.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_mini_repo_src_controller_ts",
+      "target": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_controller_publiccontroller",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "../mini-repo/src/controller.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_controller_publiccontroller",
+      "target": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_controller_publiccontroller_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "../mini-repo/src/controller.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_controller_publiccontroller",
+      "target": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_controller_publiccontroller_create",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "../mini-repo/src/controller.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_mini_repo_src_service_ts",
+      "target": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_service_publicreservationservice",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "../mini-repo/src/service.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_service_publicreservationservice",
+      "target": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_service_publicreservationservice_reserve",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "../mini-repo/src/service.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_controller_publiccontroller_constructor",
+      "target": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_service_publicreservationservice",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "../mini-repo/src/controller.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_controller_publiccontroller_create",
+      "target": "users_yasse_rmembreno_dev_corelive_packages_parser_test_fixtures_mini_repo_src_service_publicreservationservice_reserve",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "../mini-repo/src/controller.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    }
+  ],
+  "hyperedges": [],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

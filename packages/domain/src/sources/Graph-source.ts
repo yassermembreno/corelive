@@ -1,13 +1,11 @@
 export enum GraphSource {
+  GRAPHIFY = 'GRAPHIFY',
 
-    GRAPHIFY = 'GRAPHIFY',
-   
-    ADR = 'ADR',
-   
-    GIT = 'GIT',
-   
-    OPENAPI = 'OPENAPI',
-   
-    MANUAL = 'MANUAL'
-   
+  ADR = 'ADR',
+
+  GIT = 'GIT',
+
+  OPENAPI = 'OPENAPI',
+
+  MANUAL = 'MANUAL',
 }

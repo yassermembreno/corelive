@@ -111,6 +111,13 @@ Thumbs.db
 
 .ast-cache/
 
+# Nested git inside Graphify mini-repo fixture (tests recreate as needed)
+packages/source-graphify/test/fixtures/mini-repo/.git/
+
+# Transient Graphify extract runs under fixtures
+packages/source-graphify/test/fixtures/graphify-out-tmp/
+packages/source-graphify/test/fixtures/graphify-captured-run/
+
 # ==========================================
 # Temporary files
 # ==========================================

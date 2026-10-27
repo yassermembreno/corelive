@@ -1,5 +1,10 @@
 export interface NodeMetadata {
   /**
+   * Original type string from the external extractor.
+   */
+  sourceType?: string;
+
+  /**
    * Source that produced this node.
    */
   producer?: string;

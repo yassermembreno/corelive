@@ -3,6 +3,11 @@
  */
 export interface EdgeMetadata {
   /**
+   * Original relation string from the external extractor.
+   */
+  sourceRelation?: string;
+
+  /**
    * Confidence assigned by the parser.
    *
    * Range: 0.0 - 1.0
