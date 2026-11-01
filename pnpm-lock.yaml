@@ -66,6 +66,9 @@ importers:
       '@corelive/core-engine':
         specifier: workspace:*
         version: link:../../packages/core-engine
+      '@corelive/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@corelive/source-graphify':
         specifier: workspace:*
         version: link:../../packages/source-graphify
@@ -94,6 +97,9 @@ importers:
       '@corelive/domain':
         specifier: workspace:*
         version: link:../domain
+      '@corelive/graph':
+        specifier: workspace:*
+        version: link:../graph
     devDependencies:
       '@types/node':
         specifier: ^22.20.1
@@ -106,6 +112,22 @@ importers:
         version: 4.1.10(@types/node@22.20.1)(vite@8.1.5(@types/node@22.20.1)(esbuild@0.28.1)(tsx@4.23.1))
 
   packages/domain: {}
+
+  packages/graph:
+    dependencies:
+      '@corelive/domain':
+        specifier: workspace:*
+        version: link:../domain
+    devDependencies:
+      '@types/node':
+        specifier: ^22.20.1
+        version: 22.20.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.10
+        version: 4.1.10(@types/node@22.20.1)(vite@8.1.5(@types/node@22.20.1)(esbuild@0.28.1)(tsx@4.23.1))
 
   packages/source-graphify:
     dependencies:

@@ -92,4 +92,60 @@ describe('SqliteGraphRepository', () => {
       await rm(dir, { recursive: true, force: true });
     }
   });
+
+  it('getById returns the complete snapshot', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'corelive-sqlite-'));
+    const repo = new SqliteGraphRepository(join(dir, 'corelive.sqlite'));
+
+    try {
+      await repo.save(sampleSnapshot('snap_by_id'), extraction);
+      const loaded = await repo.getById('snap_by_id');
+      expect(loaded?.id).toBe('snap_by_id');
+      expect(loaded?.nodes).toHaveLength(1);
+      expect(loaded?.edges).toHaveLength(1);
+      expect(await repo.getById('missing')).toBeNull();
+    } finally {
+      repo.close();
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('getLatest is deterministic when created_at ties', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'corelive-sqlite-'));
+    const repo = new SqliteGraphRepository(join(dir, 'corelive.sqlite'));
+    const sameTime = new Date('2026-06-01T00:00:00.000Z');
+
+    try {
+      await repo.save(
+        {
+          ...sampleSnapshot('snap_aaa'),
+          createdAt: sameTime,
+          identity: {
+            sourceId: 'src_1',
+            dirty: false,
+            contentFingerprint: 'fp_a',
+          },
+        },
+        extraction,
+      );
+      await repo.save(
+        {
+          ...sampleSnapshot('snap_zzz'),
+          createdAt: sameTime,
+          identity: {
+            sourceId: 'src_2',
+            dirty: false,
+            contentFingerprint: 'fp_z',
+          },
+        },
+        extraction,
+      );
+
+      const latest = await repo.getLatest();
+      expect(latest?.id).toBe('snap_zzz');
+    } finally {
+      repo.close();
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
 });

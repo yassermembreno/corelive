@@ -11,10 +11,11 @@
     "dev": "tsx src/cli.ts",
     "start": "tsx src/cli.ts",
     "test": "vitest run",
-    "test:e2e": "vitest run test/phase0-e2e.spec.ts"
+    "test:e2e": "vitest run test/phase0-e2e.spec.ts test/phase1-query-e2e.spec.ts"
   },
   "dependencies": {
     "@corelive/core-engine": "workspace:*",
+    "@corelive/domain": "workspace:*",
     "@corelive/source-graphify": "workspace:*",
     "@corelive/storage-sqlite": "workspace:*",
     "commander": "^14.0.0"

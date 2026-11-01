@@ -213,6 +213,36 @@ export class SqliteGraphRepository implements GraphRepository {
     return this.loadSnapshot(row);
   }
 
+  async getById(snapshotId: string): Promise<KnowledgeSnapshot | null> {
+    const row = this.db
+      .prepare(`SELECT * FROM snapshots WHERE id = ? LIMIT 1`)
+      .get(snapshotId) as SnapshotRow | undefined;
+
+    if (!row) {
+      return null;
+    }
+
+    return this.loadSnapshot(row);
+  }
+
+  async getLatest(): Promise<KnowledgeSnapshot | null> {
+    const row = this.db
+      .prepare(
+        `
+      SELECT * FROM snapshots
+      ORDER BY created_at DESC, id DESC
+      LIMIT 1
+    `,
+      )
+      .get() as SnapshotRow | undefined;
+
+    if (!row) {
+      return null;
+    }
+
+    return this.loadSnapshot(row);
+  }
+
   private loadSnapshot(row: SnapshotRow): KnowledgeSnapshot {
     const nodes = (
       this.db

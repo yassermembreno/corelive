@@ -11,4 +11,7 @@ export interface GraphRepository {
   findByUniquenessKey(
     key: SnapshotUniquenessKey,
   ): Promise<KnowledgeSnapshot | null>;
+  getById(snapshotId: string): Promise<KnowledgeSnapshot | null>;
+  /** Deterministic: ORDER BY created_at DESC, id DESC. */
+  getLatest(): Promise<KnowledgeSnapshot | null>;
 }

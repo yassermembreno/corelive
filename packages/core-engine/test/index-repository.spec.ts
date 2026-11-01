@@ -53,6 +53,8 @@ describe('IndexRepository', () => {
         throw new UniqueViolationError();
       },
       findByUniquenessKey: async () => existing,
+      getById: async () => null,
+      getLatest: async () => null,
     };
 
     const repository = new IndexRepository(sourceIndexer, graphRepository);
@@ -85,6 +87,8 @@ describe('IndexRepository', () => {
     const graphRepository: GraphRepository = {
       save: async () => undefined,
       findByUniquenessKey: async () => null,
+      getById: async () => null,
+      getLatest: async () => null,
     };
 
     const repository = new IndexRepository(sourceIndexer, graphRepository);

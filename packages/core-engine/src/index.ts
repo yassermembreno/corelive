@@ -25,6 +25,16 @@ export type {
   SourceIndexResult,
   SourceIndexer,
 } from './ports/source-indexer.js';
+export {
+  SnapshotQueryService,
+  type EdgeFilterOptions,
+  type EvidenceServiceResult,
+  type NeighborQueryResult,
+  type PathQueryOptions,
+  type PathQueryResult,
+  type QueryError,
+  type SnapshotQueryOptions,
+} from './query/snapshot-query-service.js';
 export { err, ok, type Result } from './result.js';
 export { computeContentFingerprint } from './source-identity/content-fingerprint.js';
 export {
