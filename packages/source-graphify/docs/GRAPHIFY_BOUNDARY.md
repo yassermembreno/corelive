@@ -74,5 +74,5 @@ Concurrency: UNIQUE violation → load existing → `UNCHANGED`.
 
 ## Known Graphify quirks (mapper later)
 
-- `source_file` paths are relative to the **output** directory when `--out` is outside the repo.
+- `source_file` paths are relative to the **`--out` directory** (not the nested `graphify-out/` folder) when `--out` is outside the repo.
 - Node `id` values may embed absolute machine path segments.

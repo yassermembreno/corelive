@@ -13,7 +13,9 @@ export {
 } from './graph-mapper.js';
 export {
   GraphifyNodeMapper,
+  isPathInsideRoot,
   mapGraphifyNode,
   relativizeSourceFile,
   toGraphifyNodeId,
+  type RelativizeSourceFileOptions,
 } from './node-mapper.js';

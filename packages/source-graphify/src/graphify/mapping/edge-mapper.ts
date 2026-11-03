@@ -3,7 +3,11 @@ import { EdgeType, type GraphEdge } from '@corelive/domain';
 
 import type { EdgeMapper } from '../../contracts/edge-mapper.js';
 import type { GraphifyEdge } from '../graphify-edge.js';
-import { relativizeSourceFile, toGraphifyNodeId } from './node-mapper.js';
+import {
+  relativizeSourceFile,
+  toGraphifyNodeId,
+  type RelativizeSourceFileOptions,
+} from './node-mapper.js';
 import type { GraphifyEdgeMetadata } from './graphify-node-metadata.js';
 
 function mapRelation(relation: string): EdgeType {
@@ -26,9 +30,9 @@ function mapRelation(relation: string): EdgeType {
 
 function normalizeLocation(
   edge: GraphifyEdge,
-  repositoryRoot?: string,
+  options: RelativizeSourceFileOptions,
 ): string {
-  const filePath = relativizeSourceFile(edge.source_file, repositoryRoot);
+  const filePath = relativizeSourceFile(edge.source_file, options);
   const location = edge.source_location ?? '';
   return filePath ? `${filePath}:${location}` : location;
 }
@@ -39,14 +43,14 @@ function normalizeEvidence(edge: GraphifyEdge): string {
 
 export function mapGraphifyEdge(
   edge: GraphifyEdge,
-  options: { repositoryRoot?: string } = {},
+  options: RelativizeSourceFileOptions = {},
 ): GraphEdge<GraphifyEdgeMetadata> {
   const source = toGraphifyNodeId(edge.source);
   const target = toGraphifyNodeId(edge.target);
   const type = mapRelation(edge.relation);
-  const normalizedLocation = normalizeLocation(edge, options.repositoryRoot);
+  const normalizedLocation = normalizeLocation(edge, options);
   const normalizedEvidence = normalizeEvidence(edge);
-  const filePath = relativizeSourceFile(edge.source_file, options.repositoryRoot);
+  const filePath = relativizeSourceFile(edge.source_file, options);
 
   return {
     id: createDeterministicEdgeId({
@@ -83,7 +87,7 @@ export function mapGraphifyEdge(
 
 export function deduplicateGraphifyEdges(
   edges: GraphifyEdge[],
-  options: { repositoryRoot?: string } = {},
+  options: RelativizeSourceFileOptions = {},
 ): GraphEdge<GraphifyEdgeMetadata>[] {
   const seen = new Set<string>();
   const mapped: GraphEdge<GraphifyEdgeMetadata>[] = [];
@@ -101,9 +105,9 @@ export function deduplicateGraphifyEdges(
 }
 
 export class GraphifyEdgeMapper implements EdgeMapper<GraphifyEdge> {
-  constructor(private readonly repositoryRoot?: string) {}
+  constructor(private readonly options: RelativizeSourceFileOptions = {}) {}
 
   map(edge: GraphifyEdge): GraphEdge<GraphifyEdgeMetadata> {
-    return mapGraphifyEdge(edge, { repositoryRoot: this.repositoryRoot });
+    return mapGraphifyEdge(edge, this.options);
   }
 }

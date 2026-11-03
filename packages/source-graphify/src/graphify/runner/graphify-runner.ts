@@ -48,6 +48,9 @@ const STRIPPED_ENV_KEYS = [
 
 const DEFAULT_OUTPUT_MAX_BYTES = 512 * 1024 * 1024;
 
+/** Cap captured stdout/stderr to avoid unbounded memory growth. */
+export const STDIO_CAPTURE_MAX_BYTES = 2 * 1024 * 1024;
+
 function resolveGraphifyBin(): string {
   return process.env.GRAPHIFY_BIN?.trim() || 'graphify';
 }
@@ -60,6 +63,63 @@ function sanitizeEnv(): NodeJS.ProcessEnv {
   return env;
 }
 
+type CapturedStream = {
+  text: string;
+  bytes: number;
+  truncated: boolean;
+};
+
+/** @internal Exported for unit tests. */
+export function createStdioCapture(maxBytes: number): CapturedStream & {
+  append: (chunk: Buffer) => void;
+} {
+  const state: CapturedStream & { append: (chunk: Buffer) => void } = {
+    text: '',
+    bytes: 0,
+    truncated: false,
+    append(chunk: Buffer) {
+      if (state.truncated) {
+        return;
+      }
+      const remaining = maxBytes - state.bytes;
+      if (remaining <= 0) {
+        state.truncated = true;
+        return;
+      }
+      if (chunk.length <= remaining) {
+        state.text += chunk.toString('utf8');
+        state.bytes += chunk.length;
+        return;
+      }
+      state.text += chunk.subarray(0, remaining).toString('utf8');
+      state.bytes = maxBytes;
+      state.truncated = true;
+    },
+  };
+  return state;
+}
+
+export function killProcessGroup(pid: number): void {
+  if (process.platform === 'win32') {
+    try {
+      process.kill(pid);
+    } catch {
+      // Already exited.
+    }
+    return;
+  }
+
+  try {
+    process.kill(-pid, 'SIGTERM');
+  } catch {
+    try {
+      process.kill(pid, 'SIGTERM');
+    } catch {
+      // Process already exited.
+    }
+  }
+}
+
 function spawnAsync(
   command: string,
   args: string[],
@@ -68,8 +128,10 @@ function spawnAsync(
     env?: NodeJS.ProcessEnv;
     detached?: boolean;
     signal?: AbortSignal;
+    stdioMaxBytes?: number;
   } = {},
 ): Promise<{ exitCode: number; stdout: string; stderr: string; pid?: number }> {
+  const maxBytes = options.stdioMaxBytes ?? STDIO_CAPTURE_MAX_BYTES;
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: options.cwd,
@@ -79,14 +141,14 @@ function spawnAsync(
       signal: options.signal,
     });
 
-    let stdout = '';
-    let stderr = '';
+    const stdout = createStdioCapture(maxBytes);
+    const stderr = createStdioCapture(maxBytes);
 
     child.stdout.on('data', (chunk: Buffer) => {
-      stdout += chunk.toString('utf8');
+      stdout.append(chunk);
     });
     child.stderr.on('data', (chunk: Buffer) => {
-      stderr += chunk.toString('utf8');
+      stderr.append(chunk);
     });
 
     child.on('error', (error) => {
@@ -100,8 +162,8 @@ function spawnAsync(
     child.on('close', (code) => {
       resolve({
         exitCode: code ?? 1,
-        stdout,
-        stderr,
+        stdout: stdout.text,
+        stderr: stderr.text,
         pid: child.pid,
       });
     });
@@ -134,26 +196,10 @@ async function readGraphifyVersion(
   }
 }
 
-function killProcessGroup(pid: number): void {
-  if (process.platform === 'win32') {
-    process.kill(pid);
-    return;
-  }
-
-  try {
-    process.kill(-pid, 'SIGTERM');
-  } catch {
-    try {
-      process.kill(pid, 'SIGTERM');
-    } catch {
-      // Process already exited.
-    }
-  }
-}
-
 export class DefaultGraphifyRunner implements GraphifyRunner {
   constructor(
     private readonly outputMaxBytes: number = DEFAULT_OUTPUT_MAX_BYTES,
+    private readonly stdioMaxBytes: number = STDIO_CAPTURE_MAX_BYTES,
   ) {}
 
   async execute(request: {
@@ -194,27 +240,26 @@ export class DefaultGraphifyRunner implements GraphifyRunner {
         timedOut?: boolean;
         cancelled?: boolean;
       }>((resolve, reject) => {
+        // Abort is handled via onAbort + killProcessGroup (not spawn's signal)
+        // to avoid racing Node's AbortError into EXTRACTION_FAILED.
         const child = spawn(bin, argv, {
           env: sanitizeEnv(),
           stdio: ['ignore', 'pipe', 'pipe'],
           detached,
-          signal: request.signal,
         });
 
-        let stdout = '';
-        let stderr = '';
+        const stdout = createStdioCapture(this.stdioMaxBytes);
+        const stderr = createStdioCapture(this.stdioMaxBytes);
         let settled = false;
 
-        const finish = (
-          value: {
-            exitCode: number;
-            stdout: string;
-            stderr: string;
-            pid?: number;
-            timedOut?: boolean;
-            cancelled?: boolean;
-          },
-        ) => {
+        const finish = (value: {
+          exitCode: number;
+          stdout: string;
+          stderr: string;
+          pid?: number;
+          timedOut?: boolean;
+          cancelled?: boolean;
+        }) => {
           if (settled) {
             return;
           }
@@ -230,8 +275,8 @@ export class DefaultGraphifyRunner implements GraphifyRunner {
             }
             finish({
               exitCode: 1,
-              stdout,
-              stderr,
+              stdout: stdout.text,
+              stderr: stderr.text,
               pid: child.pid,
               timedOut: true,
             });
@@ -244,8 +289,8 @@ export class DefaultGraphifyRunner implements GraphifyRunner {
           }
           finish({
             exitCode: 1,
-            stdout,
-            stderr,
+            stdout: stdout.text,
+            stderr: stderr.text,
             pid: child.pid,
             cancelled: true,
           });
@@ -254,10 +299,10 @@ export class DefaultGraphifyRunner implements GraphifyRunner {
         request.signal?.addEventListener('abort', onAbort, { once: true });
 
         child.stdout.on('data', (chunk: Buffer) => {
-          stdout += chunk.toString('utf8');
+          stdout.append(chunk);
         });
         child.stderr.on('data', (chunk: Buffer) => {
-          stderr += chunk.toString('utf8');
+          stderr.append(chunk);
         });
 
         child.on('error', (error) => {
@@ -275,8 +320,8 @@ export class DefaultGraphifyRunner implements GraphifyRunner {
           request.signal?.removeEventListener('abort', onAbort);
           finish({
             exitCode: code ?? 1,
-            stdout,
-            stderr,
+            stdout: stdout.text,
+            stderr: stderr.text,
             pid: child.pid,
           });
         });
@@ -319,6 +364,9 @@ export class DefaultGraphifyRunner implements GraphifyRunner {
         graphJsonPath,
       });
     } catch (error) {
+      if (request.signal?.aborted) {
+        return err('CANCELLED');
+      }
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         return err('TOOL_NOT_FOUND');
       }

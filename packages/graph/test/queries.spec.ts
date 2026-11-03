@@ -247,6 +247,33 @@ describe('queryPath', () => {
       reason: 'MAX_DEPTH_REACHED',
     });
   });
+
+  it('maxDepth 0 allows only identity; neighbors yield MAX_DEPTH_REACHED', () => {
+    expect(queryPath(mini, create.id, create.id, { maxDepth: 0 })).toEqual({
+      status: 'found',
+      nodes: [create],
+      edges: [],
+    });
+    expect(queryPath(mini, create.id, reserve.id, { maxDepth: 0 })).toEqual({
+      status: 'no_path',
+      reason: 'MAX_DEPTH_REACHED',
+    });
+  });
+
+  it('returns NO_PATH for disconnected nodes without truncated frontier', () => {
+    const a = node('n_a', 'A');
+    const b = node('n_b', 'B');
+    const c = node('n_c', 'C');
+    // A→B only; C unreachable; no depth truncation
+    const g = snapshot(
+      [a, b, c],
+      [edge('e_ab', EdgeType.CALLS, a.id, b.id)],
+    );
+    expect(queryPath(g, a.id, c.id, { maxDepth: 20 })).toEqual({
+      status: 'no_path',
+      reason: 'NO_PATH',
+    });
+  });
 });
 
 describe('queryEvidence', () => {

@@ -104,9 +104,26 @@ export function queryDependencies(
   return outgoingHits(snapshot, nodeId, options?.edgeTypes);
 }
 
+function sortedOutgoing(
+  index: ReturnType<typeof buildAdjacencyIndex>,
+  nodeId: string,
+): GraphEdge[] {
+  return [...(index.outgoing.get(nodeId) ?? [])].sort((a, b) => {
+    if (a.target < b.target) return -1;
+    if (a.target > b.target) return 1;
+    if (a.id < b.id) return -1;
+    if (a.id > b.id) return 1;
+    return 0;
+  });
+}
+
 /**
  * Directed BFS shortest path (fewest edges).
  * Neighbors expanded in lexical order by target node id, then edge id.
+ *
+ * `maxDepth=0` allows only the identity path. When the search stops without a
+ * path, `MAX_DEPTH_REACHED` is returned only if a truncated frontier still had
+ * unvisited outgoing neighbors; otherwise `NO_PATH`.
  */
 export function queryPath(
   snapshot: KnowledgeSnapshot,
@@ -131,28 +148,25 @@ export function queryPath(
 
   type Frame = { nodeId: string; depth: number };
   const queue: Frame[] = [{ nodeId: fromId, depth: 0 }];
+  let head = 0;
   const visited = new Set<string>([fromId]);
   const parent = new Map<string, { via: GraphEdge; from: string }>();
-  let sawFrontierBeyondMax = false;
+  let truncatedWithUnvisitedNeighbors = false;
 
-  while (queue.length > 0) {
-    const current = queue.shift()!;
+  while (head < queue.length) {
+    const current = queue[head++]!;
+
     if (current.depth >= maxDepth) {
-      sawFrontierBeyondMax = true;
+      for (const edge of sortedOutgoing(index, current.nodeId)) {
+        if (!visited.has(edge.target)) {
+          truncatedWithUnvisitedNeighbors = true;
+          break;
+        }
+      }
       continue;
     }
 
-    const outs = [...(index.outgoing.get(current.nodeId) ?? [])].sort(
-      (a, b) => {
-        if (a.target < b.target) return -1;
-        if (a.target > b.target) return 1;
-        if (a.id < b.id) return -1;
-        if (a.id > b.id) return 1;
-        return 0;
-      },
-    );
-
-    for (const edge of outs) {
+    for (const edge of sortedOutgoing(index, current.nodeId)) {
       if (visited.has(edge.target)) {
         continue;
       }
@@ -169,7 +183,9 @@ export function queryPath(
 
   return {
     status: 'no_path',
-    reason: sawFrontierBeyondMax ? 'MAX_DEPTH_REACHED' : 'NO_PATH',
+    reason: truncatedWithUnvisitedNeighbors
+      ? 'MAX_DEPTH_REACHED'
+      : 'NO_PATH',
   };
 }
 

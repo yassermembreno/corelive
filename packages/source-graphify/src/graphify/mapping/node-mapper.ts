@@ -1,6 +1,8 @@
+import { existsSync, realpathSync } from 'node:fs';
+import { isAbsolute, relative, resolve } from 'node:path';
+
 import { createEvidenceId } from '@corelive/core-engine';
 import { NodeType, type GraphNode } from '@corelive/domain';
-import { isAbsolute, relative } from 'node:path';
 
 import type { NodeMapper } from '../../contracts/node-mapper.js';
 import type { GraphifyNode } from '../graphify-node.js';
@@ -88,29 +90,106 @@ function parseEndLine(sourceLocation?: string): number | undefined {
   return Number.parseInt(match[2], 10);
 }
 
+export type RelativizeSourceFileOptions = {
+  repositoryRoot?: string;
+  /**
+   * Base directory for Graphify relative `source_file` paths.
+   * Live extract: the `--out` directory (parent of `graphify-out/`).
+   * Captured fixtures: directory containing `graph.json`.
+   */
+  graphifyOutputDir?: string;
+};
+
+function toPosix(pathValue: string): string {
+  return pathValue.replace(/\\/g, '/');
+}
+
+function tryRealpath(pathValue: string): string {
+  try {
+    if (existsSync(pathValue)) {
+      return realpathSync(pathValue);
+    }
+  } catch {
+    // Fall through to resolve().
+  }
+  return resolve(pathValue);
+}
+
+/** True when candidate is the root or a path inside it (POSIX + Windows drives). */
+export function isPathInsideRoot(root: string, candidate: string): boolean {
+  const rootReal = tryRealpath(root);
+  const candidateReal = tryRealpath(candidate);
+  const rel = relative(rootReal, candidateReal);
+  if (rel === '') {
+    return true;
+  }
+  if (isAbsolute(rel)) {
+    return false;
+  }
+  const posix = toPosix(rel);
+  return posix !== '..' && !posix.startsWith('../');
+}
+
+/**
+ * Normalize Graphify `source_file` for location/evidence.
+ *
+ * Contract: relative paths are relative to the Graphify output directory
+ * (`…/graphify-out`), not the repository root. Absolute paths are used as-is.
+ * Out-of-repo / symlink escapes → `''`. Original Graphify value stays in metadata.
+ */
 export function relativizeSourceFile(
   sourceFile: string | undefined,
-  repositoryRoot?: string,
+  options: RelativizeSourceFileOptions = {},
 ): string {
   if (!sourceFile) {
     return '';
   }
 
-  const normalized = sourceFile.replace(/\\/g, '/');
+  const { repositoryRoot, graphifyOutputDir } = options;
+  const normalizedInput = toPosix(sourceFile);
 
-  if (repositoryRoot && isAbsolute(sourceFile)) {
-    return relative(repositoryRoot, sourceFile).replace(/\\/g, '/');
+  const candidates: string[] = [];
+
+  if (isAbsolute(sourceFile)) {
+    candidates.push(sourceFile);
+  } else {
+    // Contract: relative paths are usually relative to Graphify output dir.
+    if (graphifyOutputDir) {
+      candidates.push(resolve(graphifyOutputDir, sourceFile));
+    }
+    // Some Graphify runs emit repo-relative paths (e.g. `src/foo.ts`).
+    if (repositoryRoot) {
+      candidates.push(resolve(repositoryRoot, sourceFile));
+    }
+    if (candidates.length === 0) {
+      if (normalizedInput === '..' || normalizedInput.startsWith('../')) {
+        return '';
+      }
+      return normalizedInput;
+    }
   }
 
-  return normalized;
+  if (!repositoryRoot) {
+    return toPosix(candidates[0]!);
+  }
+
+  for (const candidate of candidates) {
+    if (isPathInsideRoot(repositoryRoot, candidate)) {
+      return toPosix(
+        relative(tryRealpath(repositoryRoot), tryRealpath(candidate)),
+      );
+    }
+  }
+
+  return '';
 }
 
 export function mapGraphifyNode(
   node: GraphifyNode,
-  options: { repositoryRoot?: string } = {},
+  options: RelativizeSourceFileOptions = {},
 ): GraphNode<GraphifyNodeMetadata> {
   const type = inferNodeType(node);
-  const filePath = relativizeSourceFile(node.source_file, options.repositoryRoot);
+  const filePath = relativizeSourceFile(node.source_file, options);
   const sourceType =
     typeof node.file_type === 'string'
       ? node.file_type
@@ -146,9 +225,9 @@ export function mapGraphifyNode(
 }
 
 export class GraphifyNodeMapper implements NodeMapper<GraphifyNode> {
-  constructor(private readonly repositoryRoot?: string) {}
+  constructor(private readonly options: RelativizeSourceFileOptions = {}) {}
 
   map(node: GraphifyNode): GraphNode<GraphifyNodeMetadata> {
-    return mapGraphifyNode(node, { repositoryRoot: this.repositoryRoot });
+    return mapGraphifyNode(node, this.options);
   }
 }

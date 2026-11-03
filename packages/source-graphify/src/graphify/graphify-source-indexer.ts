@@ -1,7 +1,7 @@
 import { rm } from 'node:fs/promises';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 import {
   CANONICAL_SCHEMA_VERSION,
@@ -72,7 +72,6 @@ export class GraphifySourceIndexer implements SourceIndexer {
 
       const identityAfter = await computeSourceIdentity(repositoryRoot);
       if (identityChanged(identityBefore, identityAfter)) {
-        await rm(outputDirectory, { recursive: true, force: true });
         throw new IndexError(
           'SOURCE_CHANGED_DURING_EXTRACTION',
           'extract',
@@ -80,15 +79,16 @@ export class GraphifySourceIndexer implements SourceIndexer {
         );
       }
 
-      return this.buildResult({
+      return await this.buildResult({
         graphJsonPath: execution.value.graphJsonPath,
         identity: identityAfter,
         repositoryRoot,
         durationMs: extractionDurationMs,
+        // Graphify `source_file` relatives are vs `--out`, not nested graphify-out/.
+        graphifyOutputDir: outputDirectory,
       });
-    } catch (error) {
+    } finally {
       await rm(outputDirectory, { recursive: true, force: true }).catch(() => {});
-      throw error;
     }
   }
 
@@ -102,6 +102,7 @@ export class GraphifySourceIndexer implements SourceIndexer {
       identity: input.identity,
       repositoryRoot: input.repositoryRoot,
       durationMs: 0,
+      graphifyOutputDir: dirname(resolve(input.graphJsonPath)),
     });
   }
 
@@ -109,6 +110,7 @@ export class GraphifySourceIndexer implements SourceIndexer {
     graphJsonPath: string;
     identity: SourceIdentity;
     repositoryRoot?: string;
+    graphifyOutputDir?: string;
     durationMs: number;
   }): Promise<SourceIndexResult> {
     let rawGraph: unknown;
@@ -143,6 +145,7 @@ export class GraphifySourceIndexer implements SourceIndexer {
     try {
       snapshot = mapGraphifyGraphToSnapshot(graph, input.identity, {
         repositoryRoot: input.repositoryRoot,
+        graphifyOutputDir: input.graphifyOutputDir,
       });
     } catch (error) {
       throw new IndexError(
