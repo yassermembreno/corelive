@@ -12,6 +12,7 @@ import {
   queryDependencies,
   queryDependents,
   queryEvidence,
+  queryNeighborhood,
   queryPath,
   queryWhoCalls,
 } from '../src/queries.js';
@@ -283,5 +284,74 @@ describe('queryEvidence', () => {
     expect(result?.nodeEvidence[0]?.id).toBe('ev_n_reserve');
     expect(result?.incidentEdges.length).toBeGreaterThan(0);
     expect(result?.incidentEdges[0]?.evidence[0]?.origin).toBe('ast');
+  });
+});
+
+describe('queryNeighborhood', () => {
+  const a = node('n_a', 'A');
+  const b = node('n_b', 'B');
+  const c = node('n_c', 'C');
+  const chain = snapshot(
+    [a, b, c],
+    [
+      edge('e_ab', EdgeType.CALLS, a.id, b.id),
+      edge('e_bc', EdgeType.CALLS, b.id, c.id),
+      edge('e_ac_contains', EdgeType.CONTAINS, a.id, c.id),
+    ],
+  );
+
+  it('returns direct and transitive outgoing reaches', () => {
+    const result = queryNeighborhood(chain, a.id, {
+      direction: 'outgoing',
+      maxDepth: 5,
+      edgeTypes: [EdgeType.CALLS],
+    });
+    expect(result?.direct.map((r) => r.node.id)).toEqual(['n_b']);
+    expect(result?.transitive.map((r) => r.node.id)).toEqual(['n_c']);
+    expect(result?.transitive[0]?.path.map((e) => e.id)).toEqual([
+      'e_ab',
+      'e_bc',
+    ]);
+    expect(result?.truncated).toBe(false);
+  });
+
+  it('returns incoming consumers', () => {
+    const result = queryNeighborhood(chain, c.id, {
+      direction: 'incoming',
+      maxDepth: 5,
+      edgeTypes: [EdgeType.CALLS],
+    });
+    expect(result?.direct.map((r) => r.node.id)).toEqual(['n_b']);
+    expect(result?.transitive.map((r) => r.node.id)).toEqual(['n_a']);
+  });
+
+  it('excludes CONTAINS when not in the edge filter', () => {
+    const result = queryNeighborhood(chain, a.id, {
+      direction: 'outgoing',
+      maxDepth: 1,
+      edgeTypes: [EdgeType.CALLS],
+    });
+    expect(result?.direct.map((r) => r.node.id)).toEqual(['n_b']);
+    expect(result?.direct.some((r) => r.node.id === 'n_c')).toBe(false);
+  });
+
+  it('sets truncated when maxDepth leaves unvisited neighbors', () => {
+    const result = queryNeighborhood(chain, a.id, {
+      direction: 'outgoing',
+      maxDepth: 1,
+      edgeTypes: [EdgeType.CALLS],
+    });
+    expect(result?.direct.map((r) => r.node.id)).toEqual(['n_b']);
+    expect(result?.transitive).toEqual([]);
+    expect(result?.truncated).toBe(true);
+  });
+
+  it('returns null for unknown seed', () => {
+    expect(
+      queryNeighborhood(chain, 'missing', {
+        direction: 'outgoing',
+        maxDepth: 2,
+      }),
+    ).toBeNull();
   });
 });

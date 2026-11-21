@@ -215,6 +215,149 @@ function reconstructPath(
   return { status: 'found', nodes, edges };
 }
 
+export type NeighborhoodDirection = 'incoming' | 'outgoing';
+
+export type NeighborhoodReach = {
+  node: GraphNode;
+  depth: number;
+  /** Directed path of edges from the seed to this node (or reverse for incoming). */
+  path: GraphEdge[];
+};
+
+export type NeighborhoodResult = {
+  seed: GraphNode;
+  direction: NeighborhoodDirection;
+  maxDepth: number;
+  edgeTypes?: readonly EdgeType[];
+  /** Depth exactly 1. */
+  direct: NeighborhoodReach[];
+  /** Depth greater than 1, within maxDepth. */
+  transitive: NeighborhoodReach[];
+  truncated: boolean;
+};
+
+export type NeighborhoodOptions = {
+  direction: NeighborhoodDirection;
+  maxDepth?: number;
+  edgeTypes?: readonly EdgeType[];
+};
+
+export const DEFAULT_NEIGHBORHOOD_MAX_DEPTH = 5;
+
+function sortedNeighbors(
+  index: ReturnType<typeof buildAdjacencyIndex>,
+  nodeId: string,
+  direction: NeighborhoodDirection,
+  edgeTypes?: readonly EdgeType[],
+): GraphEdge[] {
+  const raw =
+    direction === 'outgoing'
+      ? (index.outgoing.get(nodeId) ?? [])
+      : (index.incoming.get(nodeId) ?? []);
+  const filtered = filterEdges(raw, edgeTypes);
+  return [...filtered].sort((a, b) => {
+    const otherA = direction === 'outgoing' ? a.target : a.source;
+    const otherB = direction === 'outgoing' ? b.target : b.source;
+    if (otherA < otherB) return -1;
+    if (otherA > otherB) return 1;
+    if (a.id < b.id) return -1;
+    if (a.id > b.id) return 1;
+    return 0;
+  });
+}
+
+/**
+ * Bounded BFS neighborhood.
+ *
+ * Neighbors expand in lexical order by the far-end node id, then edge id.
+ * `truncated` is true only when a frontier node at maxDepth still has unvisited
+ * neighbors under the active edge filter.
+ */
+export function queryNeighborhood(
+  snapshot: KnowledgeSnapshot,
+  nodeId: string,
+  options: NeighborhoodOptions,
+): NeighborhoodResult | null {
+  const maxDepth = options.maxDepth ?? DEFAULT_NEIGHBORHOOD_MAX_DEPTH;
+  const index = buildAdjacencyIndex(snapshot);
+  const seed = index.nodesById.get(nodeId);
+  if (!seed) {
+    return null;
+  }
+
+  type Frame = { nodeId: string; depth: number; path: GraphEdge[] };
+  const queue: Frame[] = [{ nodeId, depth: 0, path: [] }];
+  let head = 0;
+  const visited = new Set<string>([nodeId]);
+  const reaches: NeighborhoodReach[] = [];
+  let truncated = false;
+
+  while (head < queue.length) {
+    const current = queue[head++]!;
+
+    if (current.depth >= maxDepth) {
+      for (const edge of sortedNeighbors(
+        index,
+        current.nodeId,
+        options.direction,
+        options.edgeTypes,
+      )) {
+        const nextId =
+          options.direction === 'outgoing' ? edge.target : edge.source;
+        if (!visited.has(nextId) && index.nodesById.has(nextId)) {
+          truncated = true;
+          break;
+        }
+      }
+      continue;
+    }
+
+    for (const edge of sortedNeighbors(
+      index,
+      current.nodeId,
+      options.direction,
+      options.edgeTypes,
+    )) {
+      const nextId =
+        options.direction === 'outgoing' ? edge.target : edge.source;
+      if (visited.has(nextId)) {
+        continue;
+      }
+      const nextNode = index.nodesById.get(nextId);
+      if (!nextNode) {
+        continue;
+      }
+      visited.add(nextId);
+      const path = [...current.path, edge];
+      const depth = current.depth + 1;
+      reaches.push({ node: nextNode, depth, path });
+      queue.push({ nodeId: nextId, depth, path });
+    }
+  }
+
+  const direct = reaches
+    .filter((r) => r.depth === 1)
+    .sort((a, b) => (a.node.id < b.node.id ? -1 : a.node.id > b.node.id ? 1 : 0));
+  const transitive = reaches
+    .filter((r) => r.depth > 1)
+    .sort((a, b) => {
+      if (a.depth !== b.depth) return a.depth - b.depth;
+      if (a.node.id < b.node.id) return -1;
+      if (a.node.id > b.node.id) return 1;
+      return 0;
+    });
+
+  return {
+    seed,
+    direction: options.direction,
+    maxDepth,
+    edgeTypes: options.edgeTypes,
+    direct,
+    transitive,
+    truncated,
+  };
+}
+
 /** Original node evidence plus incident edge evidence (no invention). */
 export function queryEvidence(
   snapshot: KnowledgeSnapshot,
