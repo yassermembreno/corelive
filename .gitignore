@@ -156,3 +156,6 @@ venv/
 *.bak
 *.backup
 *~
+
+# Generated example outputs
+examples/*.out.json

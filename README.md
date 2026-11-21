@@ -2,19 +2,22 @@
 
 > A living knowledge model for understanding software systems.
 
-CoreLive transforms source code repositories into a structured, queryable model of software knowledge.
+CoreLive transforms source code repositories into a structured, queryable model of software knowledge — then explains components and their structural impact with evidence.
 
 ## Status
 
 Phase 0 — Graphify-native indexing: **done**.  
-Phase 1 — Deterministic graph queries: **done**.
+Phase 1 — Deterministic graph queries: **done**.  
+Phase 2 — Explain, Impact & test-evidence coverage gate: **done (P0)**.
 
-Graphify is the extraction engine. CoreLive governs it, validates output, maps to `KnowledgeSnapshot`, persists atomically to SQLite, and answers deterministic queries.
+Graphify is the extraction engine. CoreLive governs it, validates output, maps to `KnowledgeSnapshot`, persists atomically to SQLite, answers deterministic queries, and produces structured analysis reports.
 
 ```text
-repository → Graphify (pinned) → validated graph.json → KnowledgeSnapshot → SQLite
-                                                                     ↓
-                                                              corelive query …
+repository → Graphify (pinned) → KnowledgeSnapshot → SQLite
+                                         ↓
+                         corelive query | explain | analyze impact
+                                         ↓
+                              AnalysisReport (observed / derived / inferred)
 ```
 
 ### Done
@@ -27,14 +30,19 @@ repository → Graphify (pinned) → validated graph.json → KnowledgeSnapshot 
 - [x] GraphifyRunner + GraphifySourceIndexer
 - [x] IndexRepository + IndexOutcome
 - [x] SQLite GraphRepository (atomic + UNIQUE + getById/getLatest)
-- [x] Pure graph queries (`@corelive/graph`)
+- [x] Pure graph queries (`@corelive/graph`) including bounded neighborhood
 - [x] SnapshotQueryService
 - [x] CLI: `corelive doctor | setup | index | query …`
+- [x] `@corelive/analysis` orchestrator + tools + local specialist port
+- [x] CLI: `corelive explain` / `corelive analyze impact`
+- [x] Deterministic + agentic evaluation suites
 
-### Next
+### Next (P1)
 
-- [ ] Dashboard / API surfaces
-- [ ] Additional sources (Git, OpenAPI, runtime)
+- [ ] Specialized test extraction / TestEvidenceTool (gate closed in P0)
+- [ ] Given–When–Then scenario generation
+- [ ] Guided onboarding
+- [ ] Dashboard / HTTP API surfaces
 
 ## Requirements
 
@@ -42,6 +50,7 @@ repository → Graphify (pinned) → validated graph.json → KnowledgeSnapshot 
 - pnpm >= 9
 - [uv](https://docs.astral.sh/uv/) (for Graphify install)
 - Graphify via `corelive setup` (`graphifyy==0.9.16`)
+- Optional for agentic mode: [Ollama](https://ollama.com/) + a local model (`CORELIVE_MODEL`, default `llama3.2`)
 
 ## Install CLI
 
@@ -57,6 +66,8 @@ corelive setup
 corelive doctor
 corelive index ./mi-repo
 corelive query who-calls reserve
+corelive explain .reserve() --no-model --json
+corelive analyze impact .reserve() --no-model --json
 ```
 
 Snapshots are stored under `~/.corelive/corelive.sqlite` (override with `CORELIVE_DATA_DIR`).
@@ -72,17 +83,47 @@ corelive index ./packages/source-graphify/test/fixtures/mini-repo
 corelive query who-calls reserve
 corelive query path create reserve
 corelive query evidence reserve
+corelive explain .reserve() --no-model
+corelive analyze impact .reserve() --depth 3 --no-model --json
 ```
+
+### Agentic (optional)
+
+```bash
+ollama pull llama3.2
+export CORELIVE_MODEL=llama3.2
+corelive explain .reserve() --json
+```
+
+`--no-model` proves deterministic infrastructure. It does **not** replace a real Ollama run for agentic evaluation.
 
 ### Fallback without global link
 
 ```bash
 pnpm corelive -- doctor
 pnpm corelive -- index ./packages/source-graphify/test/fixtures/mini-repo
-pnpm corelive -- query who-calls reserve
+pnpm corelive -- explain .reserve() --no-model --json
 ```
 
-Advanced (package cwd): `pnpm --filter @corelive/cli exec tsx src/cli.ts …` — prefer absolute paths if you use this.
+## Evaluation
+
+```bash
+pnpm --filter @corelive/analysis eval          # deterministic → eval/reports/deterministic.json
+CORELIVE_MODEL=llama3.2 \
+  pnpm --filter @corelive/analysis eval:model  # agentic → eval/reports/agentic.json
+```
+
+See [`docs/evaluation.md`](docs/evaluation.md).
+
+## Integration
+
+Programmatic API: `runAnalysis(request, dependencies)` from `@corelive/analysis`.
+
+```bash
+pnpm exec tsx examples/consume-analysis.ts
+```
+
+Docs: [`docs/integration.md`](docs/integration.md), [`docs/architecture/agentic-analysis.md`](docs/architecture/agentic-analysis.md).
 
 ## Query notes
 
@@ -111,13 +152,17 @@ Default snapshot is the latest (`ORDER BY created_at DESC, id DESC`). Pass `--sn
 ```text
 packages/
   domain/              # KnowledgeSnapshot, GraphNode, GraphEdge, SourceIdentity
-  graph/               # Pure in-memory queries (adjacency, who-calls, path, …)
+  graph/               # Pure in-memory queries (adjacency, who-calls, path, neighborhood)
   core-engine/         # IndexRepository, SnapshotQueryService, ports
   source-graphify/     # Graphify runner, validators, mappers, indexer
   storage-sqlite/      # SqliteGraphRepository
+  analysis/            # Explain / Impact orchestrator, tools, specialist port
 apps/
-  cli/                 # corelive doctor | setup | index | query
+  cli/                 # corelive doctor | setup | index | query | explain | analyze
   api/                 # Hono stub
+eval/
+  dataset.json         # Deterministic cases
+  reports/             # deterministic.json + agentic.json
 ```
 
 ## License
