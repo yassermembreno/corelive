@@ -1,0 +1,312 @@
+{
+  "nodes": [
+    {
+      "id": "ext_repo_package_json",
+      "label": "package.json",
+      "file_type": "code",
+      "source_file": "../repo/package.json",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "private_tmp_corelive_coverage_npo4k7_repo_package_name",
+      "label": "name",
+      "file_type": "code",
+      "source_file": "../repo/package.json",
+      "source_location": "L2",
+      "_origin": "ast"
+    },
+    {
+      "id": "private_tmp_corelive_coverage_npo4k7_repo_package_type",
+      "label": "type",
+      "file_type": "code",
+      "source_file": "../repo/package.json",
+      "source_location": "L3",
+      "_origin": "ast"
+    },
+    {
+      "id": "private_tmp_corelive_coverage_npo4k7_repo_package_private",
+      "label": "private",
+      "file_type": "code",
+      "source_file": "../repo/package.json",
+      "source_location": "L4",
+      "_origin": "ast"
+    },
+    {
+      "id": "ext_repo_src_api_ts",
+      "label": "api.ts",
+      "file_type": "code",
+      "source_file": "../repo/src/api.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "private_tmp_corelive_coverage_npo4k7_repo_src_api_inventoryapi",
+      "label": "InventoryApi",
+      "file_type": "code",
+      "source_file": "../repo/src/api.ts",
+      "source_location": "L3",
+      "_origin": "ast"
+    },
+    {
+      "id": "private_tmp_corelive_coverage_npo4k7_repo_src_api_inventoryapi_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": "../repo/src/api.ts",
+      "source_location": "L4",
+      "_origin": "ast"
+    },
+    {
+      "id": "private_tmp_corelive_coverage_npo4k7_repo_src_api_inventoryapi_placehold",
+      "label": ".placeHold()",
+      "file_type": "code",
+      "source_file": "../repo/src/api.ts",
+      "source_location": "L6",
+      "_origin": "ast"
+    },
+    {
+      "id": "ext_repo_src_inventory_ts",
+      "label": "inventory.ts",
+      "file_type": "code",
+      "source_file": "../repo/src/inventory.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "private_tmp_corelive_coverage_npo4k7_repo_src_inventory_inventoryservice",
+      "label": "InventoryService",
+      "file_type": "code",
+      "source_file": "../repo/src/inventory.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "private_tmp_corelive_coverage_npo4k7_repo_src_inventory_inventoryservice_reserve",
+      "label": ".reserve()",
+      "file_type": "code",
+      "source_file": "../repo/src/inventory.ts",
+      "source_location": "L2",
+      "_origin": "ast"
+    },
+    {
+      "id": "ext_repo_test_exercises_spec_ts",
+      "label": "exercises.spec.ts",
+      "file_type": "code",
+      "source_file": "../repo/test/exercises.spec.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "ext_repo_test_import_only_spec_ts",
+      "label": "import-only.spec.ts",
+      "file_type": "code",
+      "source_file": "../repo/test/import-only.spec.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "private_tmp_corelive_coverage_npo4k7_repo_test_import_only_spec_servicetype",
+      "label": "ServiceType",
+      "file_type": "code",
+      "source_file": "../repo/test/import-only.spec.ts",
+      "source_location": "L4",
+      "_origin": "ast"
+    }
+  ],
+  "edges": [
+    {
+      "source": "ext_repo_package_json",
+      "target": "private_tmp_corelive_coverage_npo4k7_repo_package_name",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "../repo/package.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_repo_package_json",
+      "target": "private_tmp_corelive_coverage_npo4k7_repo_package_type",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "../repo/package.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_repo_package_json",
+      "target": "private_tmp_corelive_coverage_npo4k7_repo_package_private",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "../repo/package.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_repo_src_api_ts",
+      "target": "ext_repo_src_inventory_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "../repo/src/api.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_repo_src_api_ts",
+      "target": "private_tmp_corelive_coverage_npo4k7_repo_src_inventory_inventoryservice",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "../repo/src/api.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_repo_src_api_ts",
+      "target": "private_tmp_corelive_coverage_npo4k7_repo_src_api_inventoryapi",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "../repo/src/api.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "private_tmp_corelive_coverage_npo4k7_repo_src_api_inventoryapi",
+      "target": "private_tmp_corelive_coverage_npo4k7_repo_src_api_inventoryapi_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "../repo/src/api.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "private_tmp_corelive_coverage_npo4k7_repo_src_api_inventoryapi",
+      "target": "private_tmp_corelive_coverage_npo4k7_repo_src_api_inventoryapi_placehold",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "../repo/src/api.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_repo_src_inventory_ts",
+      "target": "private_tmp_corelive_coverage_npo4k7_repo_src_inventory_inventoryservice",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "../repo/src/inventory.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "private_tmp_corelive_coverage_npo4k7_repo_src_inventory_inventoryservice",
+      "target": "private_tmp_corelive_coverage_npo4k7_repo_src_inventory_inventoryservice_reserve",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "../repo/src/inventory.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_repo_test_exercises_spec_ts",
+      "target": "ref_vitest",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "../repo/test/exercises.spec.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_repo_test_exercises_spec_ts",
+      "target": "ext_repo_src_inventory_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "../repo/test/exercises.spec.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_repo_test_exercises_spec_ts",
+      "target": "private_tmp_corelive_coverage_npo4k7_repo_src_inventory_inventoryservice",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "../repo/test/exercises.spec.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_repo_test_import_only_spec_ts",
+      "target": "ext_repo_src_inventory_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "../repo/test/import-only.spec.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_repo_test_import_only_spec_ts",
+      "target": "private_tmp_corelive_coverage_npo4k7_repo_src_inventory_inventoryservice",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "../repo/test/import-only.spec.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "ext_repo_test_import_only_spec_ts",
+      "target": "ext_repo_src_inventory_ts",
+      "relation": "re_exports",
+      "context": "export",
+      "confidence": "EXTRACTED",
+      "source_file": "../repo/test/import-only.spec.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "private_tmp_corelive_coverage_npo4k7_repo_src_api_inventoryapi_constructor",
+      "target": "private_tmp_corelive_coverage_npo4k7_repo_src_inventory_inventoryservice",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "../repo/src/api.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "private_tmp_corelive_coverage_npo4k7_repo_src_api_inventoryapi_placehold",
+      "target": "private_tmp_corelive_coverage_npo4k7_repo_src_inventory_inventoryservice_reserve",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "../repo/src/api.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    }
+  ],
+  "hyperedges": [],
+  "input_tokens": 0,
+  "output_tokens": 0
+}
