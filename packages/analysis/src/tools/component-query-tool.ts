@@ -29,15 +29,16 @@ function sourceRelation(edge: GraphEdge): string | undefined {
 function toObservedRelation(
   edge: GraphEdge,
   evidenceTool: EvidenceTool,
-  subject?: GraphNode,
 ): ObservedRelation {
+  // Edge evidence lives at the call/import site — do not require it to match
+  // the component node's filePath.
   return {
     edgeId: edge.id,
     type: edge.type,
     sourceId: edge.source,
     targetId: edge.target,
     sourceRelation: sourceRelation(edge),
-    evidence: evidenceTool.forEdge(edge, subject),
+    evidence: evidenceTool.forEdge(edge),
   };
 }
 
@@ -108,11 +109,11 @@ export class ComponentQueryTool {
 
     const localStructure = incident
       .filter((e) => e.type === EdgeType.CONTAINS)
-      .map((e) => toObservedRelation(e, this.evidenceTool, node));
+      .map((e) => toObservedRelation(e, this.evidenceTool));
 
     const incidentRelations = incident
       .filter((e) => e.type !== EdgeType.CONTAINS)
-      .map((e) => toObservedRelation(e, this.evidenceTool, node));
+      .map((e) => toObservedRelation(e, this.evidenceTool));
 
     return ok({
       snapshot,

@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "description": "CoreLive Phase 2 deterministic evaluation cases. Compares symbol names and structural properties, never absolute Graphify NodeIds.",
+  "cases": [
+    {
+      "id": "explain-component",
+      "operation": "explain",
+      "symbol": "gamma",
+      "expect": {
+        "ok": true,
+        "observedName": "gamma",
+        "rationaleNull": true,
+        "inferredNull": true,
+        "hasCallerNamed": "beta"
+      }
+    },
+    {
+      "id": "direct-calls-dependency",
+      "operation": "explain",
+      "symbol": "beta",
+      "expect": {
+        "ok": true,
+        "outgoingCallsNamed": ["gamma"]
+      }
+    },
+    {
+      "id": "transitive-impact-calls",
+      "operation": "impact",
+      "symbol": "gamma",
+      "maxDepth": 3,
+      "expect": {
+        "ok": true,
+        "structuralConsumersNamed": ["alpha", "beta"]
+      }
+    },
+    {
+      "id": "imports-separated-from-calls",
+      "operation": "impact",
+      "symbol": "gamma",
+      "maxDepth": 2,
+      "expect": {
+        "ok": true,
+        "moduleBindingsNamed": ["alpha"],
+        "structuralConsumersNamed": ["alpha", "beta"]
+      }
+    },
+    {
+      "id": "valid-evidence",
+      "operation": "explain",
+      "symbol": "alpha",
+      "expect": {
+        "ok": true,
+        "hasValidEvidence": true
+      }
+    },
+    {
+      "id": "inconsistent-evidence-path",
+      "kind": "unit",
+      "expect": {
+        "evidenceAvailability": "incomplete"
+      }
+    },
+    {
+      "id": "symbol-ambiguous",
+      "operation": "explain",
+      "symbol": "format",
+      "expect": {
+        "ok": false,
+        "errorCode": "SYMBOL_AMBIGUOUS"
+      }
+    },
+    {
+      "id": "symbol-missing",
+      "operation": "explain",
+      "symbol": "doesNotExist",
+      "expect": {
+        "ok": false,
+        "errorCode": "SYMBOL_NOT_FOUND"
+      }
+    },
+    {
+      "id": "rationale-null",
+      "operation": "explain",
+      "symbol": "lonely",
+      "expect": {
+        "ok": true,
+        "rationaleNull": true,
+        "limitationCodes": ["RATIONALE_ABSENT"]
+      }
+    },
+    {
+      "id": "truncated-neighborhood",
+      "operation": "impact",
+      "symbol": "gamma",
+      "maxDepth": 1,
+      "expect": {
+        "ok": true,
+        "truncated": true,
+        "limitationCodes": ["NEIGHBORHOOD_TRUNCATED"]
+      }
+    },
+    {
+      "id": "contains-excluded",
+      "operation": "impact",
+      "symbol": "gamma",
+      "maxDepth": 2,
+      "expect": {
+        "ok": true,
+        "noContainsInImpact": true,
+        "limitationCodes": ["CONTAINS_EXCLUDED"]
+      }
+    },
+    {
+      "id": "test-evidence-absent",
+      "operation": "explain",
+      "symbol": "gamma",
+      "expect": {
+        "ok": true,
+        "limitationCodes": ["TEST_EVIDENCE_UNAVAILABLE"],
+        "relatedTestsAbsent": true
+      }
+    },
+    {
+      "id": "reject-unsupported-motivation-contract",
+      "kind": "unit",
+      "expect": {
+        "motivationNulledWhenNoRationale": true
+      }
+    }
+  ]
+}

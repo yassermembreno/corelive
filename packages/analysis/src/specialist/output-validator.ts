@@ -31,12 +31,34 @@ function collectRefs(block: InferredBlock): string[] {
   return refs;
 }
 
+/**
+ * Strip known-invalid model fields before schema validation.
+ * Does not invent content — only nulls motivation when rationale is absent.
+ */
+export function sanitizeInferredRaw(
+  raw: unknown,
+  options: { rationale: string | null },
+): unknown {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return raw;
+  }
+  const copy = { ...(raw as Record<string, unknown>) };
+  if (options.rationale === null) {
+    copy.motivation = null;
+  }
+  if (!('consequences' in copy)) {
+    copy.consequences = [];
+  }
+  return copy;
+}
+
 export function validateInferred(
   raw: unknown,
   authorized: AuthorizedIds,
   options: { rationale: string | null },
 ): ValidationResult {
-  const parsed = InferredBlockSchema.safeParse(raw);
+  const sanitized = sanitizeInferredRaw(raw, options);
+  const parsed = InferredBlockSchema.safeParse(sanitized);
   if (!parsed.success) {
     return { ok: false, reason: parsed.error.message };
   }

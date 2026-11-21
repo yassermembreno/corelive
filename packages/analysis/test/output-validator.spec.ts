@@ -31,7 +31,7 @@ describe('validateInferred', () => {
     expect(result.ok).toBe(true);
   });
 
-  it('rejects motivation when rationale is null', () => {
+  it('nulls motivation when rationale is absent instead of inventing one', () => {
     const result = validateInferred(
       {
         responsibility: null,
@@ -47,7 +47,10 @@ describe('validateInferred', () => {
       authorized,
       { rationale: null },
     );
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.motivation).toBeNull();
+    }
   });
 
   it('rejects unauthorized refs', () => {

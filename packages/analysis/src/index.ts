@@ -46,6 +46,7 @@ export { OllamaAdapter } from './specialist/ollama-adapter.js';
 export type { LanguageModel } from './specialist/language-model.js';
 export {
   validateInferred,
+  sanitizeInferredRaw,
   parseModelJson,
 } from './specialist/output-validator.js';
 export {

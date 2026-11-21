@@ -1,0 +1,194 @@
+{
+  "suite": "agentic",
+  "status": "passed",
+  "generatedAt": "2026-11-21T23:46:15.890Z",
+  "latencyMs": 2138.884375,
+  "metrics": {
+    "jsonValid": true,
+    "evidenceFidelity": true,
+    "modelUsed": true,
+    "inferredPresent": true,
+    "unsupportedClaims": [],
+    "rubric": {
+      "concise": true,
+      "separatesHypothesis": true,
+      "noMotivationFromName": true,
+      "noImportAsBehavior": true,
+      "noPathAsFailure": true,
+      "unsupportedClaims": []
+    }
+  },
+  "report": {
+    "operation": "explain",
+    "snapshotId": "snap_explain",
+    "symbol": "gamma",
+    "observed": {
+      "snapshotId": "snap_explain",
+      "node": {
+        "id": "n_c",
+        "name": "gamma",
+        "type": "FUNCTION",
+        "filePath": "src/gamma.ts",
+        "startLine": 1
+      },
+      "rationale": null,
+      "localStructure": [
+        {
+          "edgeId": "e_ac_contains",
+          "type": "CONTAINS",
+          "sourceId": "n_a",
+          "targetId": "n_c",
+          "sourceRelation": "contains",
+          "evidence": [
+            {
+              "id": "ev_e_ac_contains",
+              "source": "graphify",
+              "origin": "EXTRACTED",
+              "filePath": "src/alpha.ts",
+              "location": "L2",
+              "availability": "valid"
+            }
+          ]
+        }
+      ],
+      "incidentRelations": [
+        {
+          "edgeId": "e_ac_imp",
+          "type": "IMPORTS",
+          "sourceId": "n_a",
+          "targetId": "n_c",
+          "sourceRelation": "imports",
+          "evidence": [
+            {
+              "id": "ev_e_ac_imp",
+              "source": "graphify",
+              "origin": "EXTRACTED",
+              "filePath": "src/alpha.ts",
+              "location": "L2",
+              "availability": "valid"
+            }
+          ]
+        },
+        {
+          "edgeId": "e_bc",
+          "type": "CALLS",
+          "sourceId": "n_b",
+          "targetId": "n_c",
+          "sourceRelation": "calls",
+          "evidence": [
+            {
+              "id": "ev_e_bc",
+              "source": "graphify",
+              "origin": "EXTRACTED",
+              "filePath": "src/beta.ts",
+              "location": "L2",
+              "availability": "valid"
+            }
+          ]
+        },
+        {
+          "edgeId": "e_ref",
+          "type": "REFERENCES",
+          "sourceId": "n_alone",
+          "targetId": "n_c",
+          "sourceRelation": "references",
+          "evidence": [
+            {
+              "id": "ev_e_ref",
+              "source": "graphify",
+              "origin": "EXTRACTED",
+              "filePath": "src/lonely.ts",
+              "location": "L2",
+              "availability": "valid"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "id": "ev_n_c",
+          "source": "graphify",
+          "origin": "ast",
+          "filePath": "src/gamma.ts",
+          "location": "L1",
+          "availability": "valid"
+        }
+      ]
+    },
+    "derived": {
+      "explain": {
+        "outgoingByType": {
+          "CALLS": [],
+          "IMPORTS": [],
+          "REFERENCES": []
+        },
+        "callers": [
+          {
+            "nodeId": "n_b",
+            "name": "beta",
+            "depth": 1,
+            "edgeType": "CALLS",
+            "pathEdgeIds": [
+              "e_bc"
+            ]
+          }
+        ],
+        "truncated": false,
+        "maxDepth": 3,
+        "edgeTypesApplied": [
+          "CALLS",
+          "IMPORTS",
+          "REFERENCES"
+        ]
+      }
+    },
+    "inferred": {
+      "responsibility": {
+        "kind": "hypothesis",
+        "text": "gamma appears to perform computations.",
+        "evidenceRefs": [
+          "ev_n_c"
+        ]
+      },
+      "participation": {
+        "kind": "hypothesis",
+        "text": " gamma calls beta and imports alpha, referencing lonely.",
+        "evidenceRefs": [
+          "ev_e_bc",
+          "ev_e_ac_contains",
+          "ev_e_ref"
+        ]
+      },
+      "behavior": {
+        "kind": "hypothesis",
+        "text": "gamma calls beta, references lonely, and imports alpha, containing alpha.",
+        "evidenceRefs": [
+          "ev_e_bc",
+          "ev_e_ac_contains",
+          "ev_e_ref"
+        ]
+      },
+      "motivation": null,
+      "consequences": []
+    },
+    "limitations": [
+      {
+        "code": "PATH_NOT_FAILURE",
+        "message": "A dependency path shows structural reachability, not a confirmed production failure."
+      },
+      {
+        "code": "TEST_EVIDENCE_UNAVAILABLE",
+        "message": "Graphify 0.9.16 did not emit test-path CALLS in the coverage study; TestEvidenceTool is postponed."
+      },
+      {
+        "code": "RATIONALE_ABSENT",
+        "message": "No explicit documentary rationale found. Motivation cannot be determined from the symbol name."
+      }
+    ],
+    "meta": {
+      "modelUsed": true,
+      "promptVersion": "v1",
+      "latencyMs": 2001
+    }
+  }
+}

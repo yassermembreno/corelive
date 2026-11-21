@@ -1,0 +1,87 @@
+{
+  "suite": "deterministic",
+  "generatedAt": "2026-11-21T23:46:13.299Z",
+  "total": 13,
+  "passed": 13,
+  "failed": 0,
+  "results": [
+    {
+      "id": "explain-component",
+      "pass": true,
+      "failures": [],
+      "latencyMs": 4.714292
+    },
+    {
+      "id": "direct-calls-dependency",
+      "pass": true,
+      "failures": [],
+      "latencyMs": 0.40754100000000903
+    },
+    {
+      "id": "transitive-impact-calls",
+      "pass": true,
+      "failures": [],
+      "latencyMs": 0.9821249999999964
+    },
+    {
+      "id": "imports-separated-from-calls",
+      "pass": true,
+      "failures": [],
+      "latencyMs": 0.4351249999999993
+    },
+    {
+      "id": "valid-evidence",
+      "pass": true,
+      "failures": [],
+      "latencyMs": 0.3479159999999979
+    },
+    {
+      "id": "inconsistent-evidence-path",
+      "pass": true,
+      "failures": [],
+      "latencyMs": 0.007833000000005086
+    },
+    {
+      "id": "symbol-ambiguous",
+      "pass": true,
+      "failures": [],
+      "latencyMs": 0.140625
+    },
+    {
+      "id": "symbol-missing",
+      "pass": true,
+      "failures": [],
+      "latencyMs": 0.11116699999999469
+    },
+    {
+      "id": "rationale-null",
+      "pass": true,
+      "failures": [],
+      "latencyMs": 0.39837499999998727
+    },
+    {
+      "id": "truncated-neighborhood",
+      "pass": true,
+      "failures": [],
+      "latencyMs": 0.667207999999988
+    },
+    {
+      "id": "contains-excluded",
+      "pass": true,
+      "failures": [],
+      "latencyMs": 0.39808300000001395
+    },
+    {
+      "id": "test-evidence-absent",
+      "pass": true,
+      "failures": [],
+      "latencyMs": 0.7585829999999874
+    },
+    {
+      "id": "reject-unsupported-motivation-contract",
+      "pass": true,
+      "failures": [],
+      "latencyMs": 0.34816699999998946
+    }
+  ]
+}
