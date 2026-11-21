@@ -20,6 +20,7 @@ import { SqliteGraphRepository } from '@corelive/storage-sqlite';
 
 import { argvForCommander } from './argv-for-commander.js';
 import { resolveUserPath } from './resolve-user-path.js';
+import { runAnalysisCli, type AnalysisCliOpts } from './run-analysis-cli.js';
 
 function resolveDataDir(): string {
   return (
@@ -481,6 +482,48 @@ query
   .option('--snapshot <id>', 'Snapshot id (default: latest)')
   .action(async (symbol: string, opts: QuerySharedOpts) => {
     process.exitCode = await runEvidence(symbol, opts);
+  });
+
+program
+  .command('explain')
+  .description(
+    'Explain a component from a KnowledgeSnapshot (observed/derived; optional local model)',
+  )
+  .argument('<symbol>', 'Node id or exact Graphify name')
+  .option('--snapshot <id>', 'Snapshot id (default: latest)')
+  .option('--json', 'Emit the structured AnalysisReport JSON')
+  .option('--no-model', 'Skip the language model (deterministic report only)')
+  .action(async (symbol: string, opts: AnalysisCliOpts) => {
+    process.exitCode = await runAnalysisCli(
+      'explain',
+      symbol,
+      opts,
+      resolveDbPath(),
+    );
+  });
+
+const analyze = program
+  .command('analyze')
+  .description('Structural analysis over a KnowledgeSnapshot');
+
+analyze
+  .command('impact')
+  .description(
+    'Impact analysis: CALLS / IMPORTS / REFERENCES consumers (CONTAINS excluded by default)',
+  )
+  .argument('<symbol>', 'Node id or exact Graphify name')
+  .option('--snapshot <id>', 'Snapshot id (default: latest)')
+  .option('--depth <n>', 'Max neighborhood depth (0-5)')
+  .option('--type <EdgeType>', 'Comma-separated EdgeType filter')
+  .option('--json', 'Emit the structured AnalysisReport JSON')
+  .option('--no-model', 'Skip the language model (deterministic report only)')
+  .action(async (symbol: string, opts: AnalysisCliOpts) => {
+    process.exitCode = await runAnalysisCli(
+      'impact',
+      symbol,
+      opts,
+      resolveDbPath(),
+    );
   });
 
 await program.parseAsync(argvForCommander(process.argv));

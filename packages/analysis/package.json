@@ -1,0 +1,30 @@
+{
+  "name": "@corelive/analysis",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "eval": "tsx eval/run-deterministic.ts",
+    "eval:model": "tsx eval/run-agentic.ts"
+  },
+  "dependencies": {
+    "@corelive/core-engine": "workspace:*",
+    "@corelive/domain": "workspace:*",
+    "@corelive/graph": "workspace:*",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "@corelive/storage-sqlite": "workspace:*",
+    "@corelive/source-graphify": "workspace:*",
+    "@types/node": "^22.20.1",
+    "tsx": "^4.23.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  }
+}
