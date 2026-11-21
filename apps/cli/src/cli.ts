@@ -18,6 +18,7 @@ import {
 } from '@corelive/source-graphify';
 import { SqliteGraphRepository } from '@corelive/storage-sqlite';
 
+import { argvForCommander } from './argv-for-commander.js';
 import { resolveUserPath } from './resolve-user-path.js';
 
 function resolveDataDir(): string {
@@ -482,4 +483,4 @@ query
     process.exitCode = await runEvidence(symbol, opts);
   });
 
-await program.parseAsync(process.argv);
+await program.parseAsync(argvForCommander(process.argv));

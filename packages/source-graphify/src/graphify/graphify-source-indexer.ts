@@ -1,3 +1,4 @@
+import { realpathSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -35,6 +36,31 @@ function identityChanged(
   );
 }
 
+/**
+ * Graphify emits usable `source_file` relatives when `--out` shares a path
+ * prefix with the repository. Placing `--out` under `os.tmpdir()` while the
+ * repo lives under `/tmp` (macOS: `/private/tmp`) yields bare basenames and
+ * empty CoreLive evidence paths.
+ */
+export function resolveGraphifyOutputBase(repositoryRoot: string): string {
+  try {
+    return dirname(realpathSync(repositoryRoot));
+  } catch {
+    return dirname(repositoryRoot);
+  }
+}
+
+async function createGraphifyOutputDirectory(
+  repositoryRoot: string,
+): Promise<string> {
+  const preferredBase = resolveGraphifyOutputBase(repositoryRoot);
+  try {
+    return await mkdtemp(join(preferredBase, '.corelive-graphify-'));
+  } catch {
+    return mkdtemp(join(tmpdir(), 'corelive-graphify-'));
+  }
+}
+
 export class GraphifySourceIndexer implements SourceIndexer {
   constructor(
     private readonly runner: GraphifyRunner = new DefaultGraphifyRunner(),
@@ -47,9 +73,8 @@ export class GraphifySourceIndexer implements SourceIndexer {
     const repositoryRoot = resolve(request.sourcePath);
     const identityBefore = await computeSourceIdentity(repositoryRoot);
 
-    const outputDirectory = await mkdtemp(
-      join(tmpdir(), 'corelive-graphify-'),
-    );
+    const outputDirectory =
+      await createGraphifyOutputDirectory(repositoryRoot);
 
     let extractionDurationMs = 0;
 

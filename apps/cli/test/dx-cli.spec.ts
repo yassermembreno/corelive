@@ -110,6 +110,17 @@ describe('DX CLI bin wrapper', () => {
       expect(who.code).toBe(0);
       expect(who.stdout).toContain('.create()');
       expect(who.stderr).not.toContain('Failed to start corelive');
+
+      const dependents = await runBin(dataDir, [
+        '--',
+        'query',
+        'dependents',
+        'reserve',
+        '--type',
+        'CALLS',
+      ]);
+      expect(dependents.code).toBe(0);
+      expect(dependents.stdout).toContain('.create()');
     } finally {
       await rm(root, { recursive: true, force: true });
     }

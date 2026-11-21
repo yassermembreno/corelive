@@ -7,7 +7,10 @@ import { spawn } from 'node:child_process';
 import { err, ok } from '@corelive/core-engine';
 import { describe, expect, it } from 'vitest';
 
-import { GraphifySourceIndexer } from '../src/graphify/graphify-source-indexer.js';
+import {
+  GraphifySourceIndexer,
+  resolveGraphifyOutputBase,
+} from '../src/graphify/graphify-source-indexer.js';
 import type { GraphifyRunner } from '../src/graphify/runner/graphify-runner.js';
 
 const capturedGraph = resolve(
@@ -77,6 +80,9 @@ describe('GraphifySourceIndexer temp cleanup', () => {
     const indexer = new GraphifySourceIndexer(runner);
     await indexer.index({ sourcePath: repoDir });
     expect(outputDirectory).not.toBe('');
+    expect(outputDirectory.startsWith(resolveGraphifyOutputBase(repoDir))).toBe(
+      true,
+    );
     await expectMissing(outputDirectory);
   });
 
