@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "corelive": "pnpm --filter @corelive/cli exec node --import tsx ./src/cli.ts"
   },
   "keywords": [],
   "author": "",

@@ -43,32 +43,57 @@ repository → Graphify (pinned) → validated graph.json → KnowledgeSnapshot 
 - [uv](https://docs.astral.sh/uv/) (for Graphify install)
 - Graphify via `corelive setup` (`graphifyy==0.9.16`)
 
-## Install
+## Install CLI
 
 ```bash
 pnpm install
-pnpm --filter @corelive/cli exec tsx src/cli.ts setup
-pnpm --filter @corelive/cli exec tsx src/cli.ts doctor
+pnpm --filter @corelive/cli link --global
 ```
 
-## Index a repository
+Then use `corelive` from any directory:
 
 ```bash
-pnpm --filter @corelive/cli exec tsx src/cli.ts index /path/to/repo
+corelive setup
+corelive doctor
+corelive index ./mi-repo
+corelive query who-calls reserve
 ```
 
 Snapshots are stored under `~/.corelive/corelive.sqlite` (override with `CORELIVE_DATA_DIR`).
 
-## Query a snapshot
+Relative paths (`./mi-repo`) resolve from **your shell directory** (via `INIT_CWD` / cwd), not from `apps/cli`.
 
-Graphify node names are exact labels (case-sensitive), e.g. `PublicController`, `.create()`, `.reserve()`. Prefer those over long `graphify:…` ids. Resolution order: exact `node.id`, then exact `node.name`. Ambiguous names fail with candidates.
+### Smoke (from monorepo root)
 
 ```bash
-pnpm --filter @corelive/cli exec tsx src/cli.ts query who-calls '.reserve()'
-pnpm --filter @corelive/cli exec tsx src/cli.ts query dependents '.reserve()' --type CALLS
-pnpm --filter @corelive/cli exec tsx src/cli.ts query dependencies '.create()'
-pnpm --filter @corelive/cli exec tsx src/cli.ts query path '.create()' '.reserve()'
-pnpm --filter @corelive/cli exec tsx src/cli.ts query evidence '.reserve()' --snapshot <id>
+export CORELIVE_DATA_DIR=/tmp/corelive-demo
+corelive doctor
+corelive index ./packages/source-graphify/test/fixtures/mini-repo
+corelive query who-calls reserve
+corelive query path create reserve
+corelive query evidence reserve
+```
+
+### Fallback without global link
+
+```bash
+pnpm corelive -- doctor
+pnpm corelive -- index ./packages/source-graphify/test/fixtures/mini-repo
+pnpm corelive -- query who-calls reserve
+```
+
+Advanced (package cwd): `pnpm --filter @corelive/cli exec tsx src/cli.ts …` — prefer absolute paths if you use this.
+
+## Query notes
+
+Symbol resolution is exact `id`, then exact `name`, then deterministic expansions (`reserve` → `.reserve()`, `create` → `.create()`). Ambiguous matches list candidates (no fuzzy search).
+
+```bash
+corelive query who-calls reserve
+corelive query dependents reserve --type CALLS
+corelive query dependencies create
+corelive query path create reserve
+corelive query evidence reserve --snapshot <id>
 ```
 
 Exit codes:

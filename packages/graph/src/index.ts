@@ -21,3 +21,7 @@ export {
   type ResolveSymbolResult,
   type SymbolCandidate,
 } from './resolve-symbol.js';
+export {
+  resolveSymbolFriendly,
+  symbolExpansions,
+} from './resolve-symbol-friendly.js';

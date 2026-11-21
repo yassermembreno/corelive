@@ -110,6 +110,16 @@ describe('SnapshotQueryService', () => {
     }
   });
 
+  it('who-calls accepts friendly shorthand reserve → .reserve()', async () => {
+    const service = new SnapshotQueryService(repoWith(fixtureSnapshot()));
+    const result = await service.whoCalls('reserve');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.symbol.name).toBe('.reserve()');
+      expect(result.value.hits[0]?.node.name).toBe('.create()');
+    }
+  });
+
   it('returns SNAPSHOT_NOT_FOUND when empty', async () => {
     const service = new SnapshotQueryService(repoWith(null));
     const result = await service.whoCalls('.reserve()');

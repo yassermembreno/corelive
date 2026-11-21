@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "bin": {
-    "corelive": "./src/cli.ts"
+    "corelive": "./bin/corelive.mjs"
   },
   "main": "src/cli.ts",
   "scripts": {
@@ -11,18 +11,18 @@
     "dev": "tsx src/cli.ts",
     "start": "tsx src/cli.ts",
     "test": "vitest run",
-    "test:e2e": "vitest run test/phase0-e2e.spec.ts test/phase1-query-e2e.spec.ts test/phase1-real-e2e.spec.ts"
+    "test:e2e": "vitest run test/phase0-e2e.spec.ts test/phase1-query-e2e.spec.ts test/phase1-real-e2e.spec.ts test/dx-cli.spec.ts"
   },
   "dependencies": {
     "@corelive/core-engine": "workspace:*",
     "@corelive/domain": "workspace:*",
     "@corelive/source-graphify": "workspace:*",
     "@corelive/storage-sqlite": "workspace:*",
-    "commander": "^14.0.0"
+    "commander": "^14.0.0",
+    "tsx": "^4.23.1"
   },
   "devDependencies": {
     "@types/node": "^22.20.1",
-    "tsx": "^4.23.1",
     "typescript": "^5.9.3",
     "vitest": "^4.1.10"
   }

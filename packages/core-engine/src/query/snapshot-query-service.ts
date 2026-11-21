@@ -4,7 +4,7 @@ import {
   queryEvidence,
   queryPath,
   queryWhoCalls,
-  resolveSymbol,
+  resolveSymbolFriendly,
   type EvidenceQueryResult,
   type NeighborHit,
   type PathResult,
@@ -184,7 +184,7 @@ export class SnapshotQueryService {
     snapshot: KnowledgeSnapshot,
     symbol: string,
   ): Result<KnowledgeSnapshot['nodes'][number], QueryError> {
-    const resolved = resolveSymbol(snapshot, symbol);
+    const resolved = resolveSymbolFriendly(snapshot, symbol);
     if (resolved.status === 'found') {
       return ok(resolved.node);
     }

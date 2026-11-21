@@ -1,6 +1,6 @@
 import { mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 
 import { Command } from 'commander';
@@ -17,6 +17,8 @@ import {
   assertCompatibleGraphifyVersion,
 } from '@corelive/source-graphify';
 import { SqliteGraphRepository } from '@corelive/storage-sqlite';
+
+import { resolveUserPath } from './resolve-user-path.js';
 
 function resolveDataDir(): string {
   return (
@@ -125,7 +127,7 @@ async function setup(): Promise<number> {
 }
 
 async function indexRepository(sourcePath: string): Promise<number> {
-  const abs = resolve(sourcePath);
+  const abs = resolveUserPath(sourcePath);
   const dataDir = resolveDataDir();
   mkdirSync(dataDir, { recursive: true });
 
