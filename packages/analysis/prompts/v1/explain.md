@@ -1,12 +1,16 @@
 Operation: explain
 
-Using the authorized context JSON, produce a concise inferred explanation of the component.
+Using the authorized context JSON, produce structured claims then a concise inferred explanation.
 
-Focus:
+Order:
+1. `claims` — only relations from authorizedRelations, correct direction and predicate.
+2. Narrative hypotheses that do not contradict those claims.
+
+Focus for narrative:
 - responsibility: what the component appears to do according to evidence
-- participation: how it relates to callers and dependencies in the context
+- participation: how callers/dependencies relate (respect CALLS vs IMPORTS vs REFERENCES)
 - behavior: identifiable flow from observed/derived relations
 - motivation: only when observed.rationale is non-null
-- consequences: empty array for explain unless a clear, evidence-backed hypothesis exists
+- consequences: empty array unless a clear, evidence-backed hypothesis exists
 
 Return JSON only.

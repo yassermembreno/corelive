@@ -15,6 +15,7 @@ describe('validateInferred', () => {
   it('accepts a well-formed hypothesis block', () => {
     const result = validateInferred(
       {
+        claims: [],
         responsibility: {
           kind: 'hypothesis',
           text: 'Reserves inventory',
@@ -26,7 +27,7 @@ describe('validateInferred', () => {
         consequences: [],
       },
       authorized,
-      { rationale: null },
+      { rationale: null, authorizedRelations: [] },
     );
     expect(result.ok).toBe(true);
   });
@@ -34,6 +35,7 @@ describe('validateInferred', () => {
   it('nulls motivation when rationale is absent instead of inventing one', () => {
     const result = validateInferred(
       {
+        claims: [],
         responsibility: null,
         participation: null,
         behavior: null,
@@ -45,7 +47,7 @@ describe('validateInferred', () => {
         consequences: [],
       },
       authorized,
-      { rationale: null },
+      { rationale: null, authorizedRelations: [] },
     );
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -56,6 +58,7 @@ describe('validateInferred', () => {
   it('rejects unauthorized refs', () => {
     const result = validateInferred(
       {
+        claims: [],
         responsibility: {
           kind: 'hypothesis',
           text: 'x',
@@ -67,7 +70,7 @@ describe('validateInferred', () => {
         consequences: [],
       },
       authorized,
-      { rationale: null },
+      { rationale: null, authorizedRelations: [] },
     );
     expect(result.ok).toBe(false);
   });

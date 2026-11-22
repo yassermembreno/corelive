@@ -5,13 +5,18 @@ import type {
   ObservedBlock,
 } from '../contracts/analysis-report.js';
 import type { AnalysisLimits } from '../contracts/limits.js';
-import type { AuthorizedIds } from '../specialist/output-validator.js';
+import {
+  relationsFromObserved,
+  type AuthorizedIds,
+  type AuthorizedRelation,
+} from '../specialist/output-validator.js';
 import type { TypedReach } from '../tools/dependency-tool.js';
 
 export type AssembledContext = {
   observed: ObservedBlock;
   derived: DerivedBlock;
   authorizedIds: AuthorizedIds;
+  authorizedRelations: AuthorizedRelation[];
   promptPayload: Record<string, unknown>;
 };
 
@@ -112,6 +117,7 @@ export function assembleContext(
   };
   const limitedDerived = limitDerived(derived, limits);
   const authorizedIds = collectAuthorized(limitedObserved, limitedDerived);
+  const authorizedRelations = relationsFromObserved(limitedObserved);
 
   const promptPayload = {
     notice:
@@ -123,16 +129,18 @@ export function assembleContext(
       edgeIds: [...authorizedIds.edgeIds].sort(),
       evidenceIds: [...authorizedIds.evidenceIds].sort(),
     },
+    authorizedRelations,
     edgeSemantics: {
-      CALLS: 'structural consumer / invocation',
-      IMPORTS: 'module binding only',
-      REFERENCES: 'weak mention',
+      CALLS: 'structural consumer / invocation — direction is source CALLS target',
+      IMPORTS: 'module binding only — never describe as a call or execution',
+      REFERENCES: 'weak mention — never describe as execution',
       CONTAINS: 'hierarchy; not a dependency walk edge',
     },
     rules: {
       motivationRequiresRationale: limitedObserved.rationale !== null,
       pathIsNotFailure: true,
       importIsNotExercise: true,
+      claimsMustMatchGraphDirectionAndType: true,
     },
   };
 
@@ -140,6 +148,7 @@ export function assembleContext(
     observed: limitedObserved,
     derived: limitedDerived,
     authorizedIds,
+    authorizedRelations,
     promptPayload,
   };
 }

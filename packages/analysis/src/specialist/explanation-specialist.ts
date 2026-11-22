@@ -13,6 +13,7 @@ import {
   parseModelJson,
   validateInferred,
   type AuthorizedIds,
+  type AuthorizedRelation,
 } from './output-validator.js';
 
 export const PROMPT_VERSION = 'v1';
@@ -47,6 +48,7 @@ export class ExplanationSpecialist {
     operation: 'explain' | 'impact';
     promptPayload: Record<string, unknown>;
     authorizedIds: AuthorizedIds;
+    authorizedRelations: readonly AuthorizedRelation[];
     rationale: string | null;
     timeoutMs: number;
   }): Promise<SpecialistResult> {
@@ -78,6 +80,7 @@ export class ExplanationSpecialist {
         const raw = parseModelJson(response.text);
         const validated = validateInferred(raw, input.authorizedIds, {
           rationale: input.rationale,
+          authorizedRelations: input.authorizedRelations,
         });
         if (!validated.ok) {
           return {

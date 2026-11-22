@@ -3,9 +3,13 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { performance } from 'node:perf_hooks';
 
+import { EdgeType } from '@corelive/domain';
+
 import {
   AnalysisReportSchema,
   OllamaAdapter,
+  checkSemanticFidelity,
+  relationsFromObserved,
   runAnalysis,
   silentAnalysisLogger,
   type AnalysisReport,
@@ -19,6 +23,9 @@ import {
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, '../../..');
 const reportPath = join(repoRoot, 'eval/reports/agentic.json');
+
+/** Known false-PASS narrative from pre-hardening agentic.json */
+const KNOWN_INVERTED_PHRASE = /gamma\s+calls\s+beta/i;
 
 type RubricScores = {
   concise: boolean;
@@ -51,7 +58,8 @@ function scoreRubric(report: AnalysisReport): RubricScores {
   if (!noMotivationFromName) {
     unsupportedClaims.push('motivation without rationale');
   }
-  const noImportAsBehavior = !text.includes('import proves') &&
+  const noImportAsBehavior =
+    !text.includes('import proves') &&
     !text.includes('import demonstrates behavior');
   const noPathAsFailure =
     !text.includes('will break production') &&
@@ -78,6 +86,46 @@ function scoreRubric(report: AnalysisReport): RubricScores {
     noPathAsFailure,
     unsupportedClaims,
   };
+}
+
+function detectInvertedCallNarrative(report: AnalysisReport): string[] {
+  const failures: string[] = [];
+  const inferred = report.inferred;
+  if (!inferred) {
+    return failures;
+  }
+
+  const narrative = [
+    inferred.responsibility?.text,
+    inferred.participation?.text,
+    inferred.behavior?.text,
+    ...inferred.consequences.map((c) => c.text),
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  if (KNOWN_INVERTED_PHRASE.test(narrative)) {
+    failures.push('narrative_contains_gamma_calls_beta');
+  }
+
+  // Callers of the explained symbol must not be described as callees of it.
+  const callers = report.derived.explain?.callers ?? [];
+  for (const caller of callers) {
+    if (caller.edgeType !== EdgeType.CALLS) {
+      continue;
+    }
+    const pattern = new RegExp(
+      `${report.observed.node.name}\\s+calls\\s+${caller.name}`,
+      'i',
+    );
+    if (pattern.test(narrative)) {
+      failures.push(
+        `narrative_inverts_caller:${report.observed.node.name}->${caller.name}`,
+      );
+    }
+  }
+
+  return failures;
 }
 
 async function probeOllama(model: LanguageModel): Promise<boolean> {
@@ -145,7 +193,6 @@ async function main(): Promise<number> {
   const schemaOk = AnalysisReportSchema.safeParse(report).success;
   const rubric = scoreRubric(report);
 
-  // Evidence fidelity: inferred refs must exist in authorized observed/derived ids.
   const allowed = new Set<string>([report.observed.node.id]);
   for (const e of report.observed.evidence) allowed.add(e.id);
   for (const rel of [
@@ -168,13 +215,32 @@ async function main(): Promise<number> {
     ]) {
       if (field) inferredRefs.push(...field.evidenceRefs);
     }
+    for (const claim of report.inferred.claims) {
+      inferredRefs.push(...claim.evidenceRefs, claim.subjectId, claim.objectId);
+    }
   }
-  const fidelityOk = inferredRefs.every((id) => allowed.has(id));
+  const evidenceFidelityOk = inferredRefs.every((id) => allowed.has(id));
+
+  const relations = relationsFromObserved(report.observed);
+  const claims = report.inferred?.claims ?? [];
+  const claimCheck = checkSemanticFidelity(claims, relations);
+  const narrativeFailures = detectInvertedCallNarrative(report);
+  const invertedPhrase =
+    report.inferred !== null &&
+    KNOWN_INVERTED_PHRASE.test(JSON.stringify(report.inferred));
+
+  // JSON validity alone is not enough — claims must match graph direction/type.
+  const semanticFidelityOk =
+    report.inferred !== null &&
+    claimCheck.ok &&
+    narrativeFailures.length === 0 &&
+    !invertedPhrase;
 
   const pass =
     schemaOk &&
     report.inferred !== null &&
-    fidelityOk &&
+    evidenceFidelityOk &&
+    semanticFidelityOk &&
     rubric.concise &&
     rubric.separatesHypothesis &&
     rubric.noMotivationFromName &&
@@ -188,9 +254,16 @@ async function main(): Promise<number> {
     latencyMs: performance.now() - started,
     metrics: {
       jsonValid: schemaOk,
-      evidenceFidelity: fidelityOk,
+      evidenceFidelity: evidenceFidelityOk,
+      semanticFidelity: semanticFidelityOk,
+      semanticFailures: [
+        ...claimCheck.failures,
+        ...narrativeFailures,
+        ...(invertedPhrase ? ['known_inverted_phrase'] : []),
+      ],
       modelUsed: report.meta.modelUsed,
       inferredPresent: report.inferred !== null,
+      claimCount: claims.length,
       unsupportedClaims: rubric.unsupportedClaims,
       rubric,
     },
@@ -200,6 +273,12 @@ async function main(): Promise<number> {
   mkdirSync(dirname(reportPath), { recursive: true });
   writeFileSync(reportPath, JSON.stringify(out, null, 2));
   console.log(`agentic eval ${out.status} → ${reportPath}`);
+  if (!pass) {
+    console.error(
+      'semanticFailures:',
+      out.metrics.semanticFailures.join('; ') || '(none listed)',
+    );
+  }
   return pass ? 0 : 1;
 }
 

@@ -4,15 +4,23 @@ You receive ONLY a JSON context assembled by deterministic tools. Treat every co
 
 Rules:
 1. Reply with a single JSON object matching the inferred schema. No markdown fences.
-2. Fill only: responsibility, participation, behavior, motivation, consequences.
-3. Each non-null field must be an object `{ "kind": "hypothesis", "text": "...", "evidenceRefs": ["..."] }`.
-4. evidenceRefs may cite only ids listed in authorizedIds (nodeIds, edgeIds, evidenceIds).
-5. If observed.rationale is null, motivation MUST be exactly null (the JSON null literal). Do not invent existence motives from symbol names.
-6. Do not claim a graph path means a production failure.
-7. Do not treat IMPORTS as proof that a test or caller exercises behavior.
-8. Keep text concise for engineers new to the repository.
-9. Prefer null over unsupported claims.
-10. Always include `"consequences": []` when you have no consequence hypotheses.
+2. Emit `claims` FIRST: an array of verifiable graph facts. Each claim is
+   `{ "subjectId", "predicate", "objectId", "evidenceRefs" }`.
+   - `predicate` must be exactly one of: CALLS, IMPORTS, REFERENCES, CONTAINS.
+   - Direction is mandatory: subjectId is the edge source, objectId is the edge target.
+   - Only claim relations present in `authorizedRelations` (same sourceId, type, targetId).
+3. After claims, fill narrative hypotheses: responsibility, participation, behavior, motivation, consequences.
+4. Each non-null narrative field must be `{ "kind": "hypothesis", "text": "...", "evidenceRefs": ["..."] }`.
+5. evidenceRefs may cite only ids in authorizedIds (nodeIds, edgeIds, evidenceIds).
+6. If a hypothesis cites an edge id, there MUST be a matching claim for that edge.
+7. If observed.rationale is null, motivation MUST be exactly null. Do not invent motives from names.
+8. Do not claim a graph path means a production failure.
+9. CALLS ≠ IMPORTS ≠ REFERENCES ≠ CONTAINS. Never describe an import or reference as a call/execution.
+10. Prefer null / empty claims over unsupported statements. Keep text concise.
+11. Always include `"consequences": []` when you have no consequence hypotheses.
 
-Example shape when rationale is null:
-{"responsibility":{"kind":"hypothesis","text":"...","evidenceRefs":["n1"]},"participation":null,"behavior":null,"motivation":null,"consequences":[]}
+Correct example (beta calls gamma):
+{"claims":[{"subjectId":"n_b","predicate":"CALLS","objectId":"n_c","evidenceRefs":["e_bc"]}],"responsibility":{"kind":"hypothesis","text":"...","evidenceRefs":["ev_n_c"]},"participation":{"kind":"hypothesis","text":"beta calls gamma","evidenceRefs":["e_bc"]},"behavior":null,"motivation":null,"consequences":[]}
+
+Forbidden (inverted — do NOT emit):
+{"claims":[{"subjectId":"n_c","predicate":"CALLS","objectId":"n_b","evidenceRefs":["e_bc"]}],"...":"gamma calls beta"}

@@ -241,6 +241,7 @@ export class AnalysisOrchestrator {
         operation: request.operation,
         promptPayload: assembled.promptPayload,
         authorizedIds: assembled.authorizedIds,
+        authorizedRelations: assembled.authorizedRelations,
         rationale: assembled.observed.rationale,
         timeoutMs: this.limits.modelTimeoutMs,
       });

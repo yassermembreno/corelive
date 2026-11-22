@@ -6,12 +6,14 @@ export {
 export {
   AnalysisReportSchema,
   InferredBlockSchema,
+  RelationClaimSchema,
   type AnalysisReport,
   type DerivedBlock,
   type EvidenceRecord,
   type Hypothesis,
   type InferredBlock,
   type ObservedBlock,
+  type RelationClaim,
 } from './contracts/analysis-report.js';
 export {
   TestEvidenceSchema,
@@ -48,6 +50,9 @@ export {
   validateInferred,
   sanitizeInferredRaw,
   parseModelJson,
+  relationsFromObserved,
+  checkSemanticFidelity,
+  type AuthorizedRelation,
 } from './specialist/output-validator.js';
 export {
   consoleAnalysisLogger,

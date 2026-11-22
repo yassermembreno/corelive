@@ -1,6 +1,6 @@
 {
   "suite": "deterministic",
-  "generatedAt": "2026-11-21T23:46:13.299Z",
+  "generatedAt": "2026-11-22T01:53:02.261Z",
   "total": 13,
   "passed": 13,
   "failed": 0,
@@ -9,79 +9,79 @@
       "id": "explain-component",
       "pass": true,
       "failures": [],
-      "latencyMs": 4.714292
+      "latencyMs": 4.884625
     },
     {
       "id": "direct-calls-dependency",
       "pass": true,
       "failures": [],
-      "latencyMs": 0.40754100000000903
+      "latencyMs": 0.39908300000001873
     },
     {
       "id": "transitive-impact-calls",
       "pass": true,
       "failures": [],
-      "latencyMs": 0.9821249999999964
+      "latencyMs": 0.9803330000000017
     },
     {
       "id": "imports-separated-from-calls",
       "pass": true,
       "failures": [],
-      "latencyMs": 0.4351249999999993
+      "latencyMs": 0.48150000000001114
     },
     {
       "id": "valid-evidence",
       "pass": true,
       "failures": [],
-      "latencyMs": 0.3479159999999979
+      "latencyMs": 0.26533399999999574
     },
     {
       "id": "inconsistent-evidence-path",
       "pass": true,
       "failures": [],
-      "latencyMs": 0.007833000000005086
+      "latencyMs": 0.0061670000000049185
     },
     {
       "id": "symbol-ambiguous",
       "pass": true,
       "failures": [],
-      "latencyMs": 0.140625
+      "latencyMs": 0.09749999999999659
     },
     {
       "id": "symbol-missing",
       "pass": true,
       "failures": [],
-      "latencyMs": 0.11116699999999469
+      "latencyMs": 0.09345799999999826
     },
     {
       "id": "rationale-null",
       "pass": true,
       "failures": [],
-      "latencyMs": 0.39837499999998727
+      "latencyMs": 0.34591600000001677
     },
     {
       "id": "truncated-neighborhood",
       "pass": true,
       "failures": [],
-      "latencyMs": 0.667207999999988
+      "latencyMs": 0.3911250000000166
     },
     {
       "id": "contains-excluded",
       "pass": true,
       "failures": [],
-      "latencyMs": 0.39808300000001395
+      "latencyMs": 0.2617909999999881
     },
     {
       "id": "test-evidence-absent",
       "pass": true,
       "failures": [],
-      "latencyMs": 0.7585829999999874
+      "latencyMs": 0.7000409999999988
     },
     {
       "id": "reject-unsupported-motivation-contract",
       "pass": true,
       "failures": [],
-      "latencyMs": 0.34816699999998946
+      "latencyMs": 0.29895799999999895
     }
   ]
 }

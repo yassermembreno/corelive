@@ -1,13 +1,16 @@
 {
   "suite": "agentic",
   "status": "passed",
-  "generatedAt": "2026-11-21T23:46:15.890Z",
-  "latencyMs": 2138.884375,
+  "generatedAt": "2026-11-22T01:53:13.089Z",
+  "latencyMs": 7143.63425,
   "metrics": {
     "jsonValid": true,
     "evidenceFidelity": true,
+    "semanticFidelity": true,
+    "semanticFailures": [],
     "modelUsed": true,
     "inferredPresent": true,
+    "claimCount": 1,
     "unsupportedClaims": [],
     "rubric": {
       "concise": true,
@@ -143,29 +146,36 @@
       }
     },
     "inferred": {
+      "claims": [
+        {
+          "subjectId": "n_b",
+          "predicate": "CALLS",
+          "objectId": "n_c",
+          "evidenceRefs": [
+            "ev_e_bc"
+          ]
+        }
+      ],
       "responsibility": {
         "kind": "hypothesis",
-        "text": "gamma appears to perform computations.",
+        "text": "beta calls gamma",
         "evidenceRefs": [
-          "ev_n_c"
+          "ev_e_bc"
         ]
       },
       "participation": {
         "kind": "hypothesis",
-        "text": " gamma calls beta and imports alpha, referencing lonely.",
+        "text": "beta is a caller of gamma",
         "evidenceRefs": [
-          "ev_e_bc",
-          "ev_e_ac_contains",
-          "ev_e_ref"
+          "ev_e_bc"
         ]
       },
       "behavior": {
         "kind": "hypothesis",
-        "text": "gamma calls beta, references lonely, and imports alpha, containing alpha.",
+        "text": "gamma is a function called by beta",
         "evidenceRefs": [
-          "ev_e_bc",
           "ev_e_ac_contains",
-          "ev_e_ref"
+          "ev_e_bc"
         ]
       },
       "motivation": null,
@@ -188,7 +198,7 @@
     "meta": {
       "modelUsed": true,
       "promptVersion": "v1",
-      "latencyMs": 2001
+      "latencyMs": 4406
     }
   }
 }

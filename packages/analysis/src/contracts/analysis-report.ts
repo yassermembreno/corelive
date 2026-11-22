@@ -97,7 +97,24 @@ export const HypothesisSchema = z.object({
   evidenceRefs: z.array(z.string()).default([]),
 });
 
+/** Verifiable graph assertion — validated against authorized relations before narrative. */
+export const RelationClaimPredicateSchema = z.enum([
+  'CALLS',
+  'IMPORTS',
+  'REFERENCES',
+  'CONTAINS',
+]);
+
+export const RelationClaimSchema = z.object({
+  subjectId: z.string().min(1),
+  predicate: RelationClaimPredicateSchema,
+  objectId: z.string().min(1),
+  evidenceRefs: z.array(z.string()).default([]),
+});
+
 export const InferredBlockSchema = z.object({
+  /** Structured relational facts; must match graph direction and EdgeType. */
+  claims: z.array(RelationClaimSchema).default([]),
   responsibility: HypothesisSchema.nullable(),
   participation: HypothesisSchema.nullable(),
   behavior: HypothesisSchema.nullable(),
@@ -133,4 +150,5 @@ export type ObservedRelation = z.infer<typeof ObservedRelationSchema>;
 export type DerivedBlock = z.infer<typeof DerivedBlockSchema>;
 export type EvidenceRecord = z.infer<typeof EvidenceRecordSchema>;
 export type Hypothesis = z.infer<typeof HypothesisSchema>;
+export type RelationClaim = z.infer<typeof RelationClaimSchema>;
 export type Limitation = z.infer<typeof LimitationSchema>;
