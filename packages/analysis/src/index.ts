@@ -51,7 +51,10 @@ export {
   sanitizeInferredRaw,
   parseModelJson,
   relationsFromObserved,
+  buildEvidenceToEdgesIndex,
+  checkClaimFidelity,
   checkSemanticFidelity,
+  computeEvidenceCoverage,
   type AuthorizedRelation,
 } from './specialist/output-validator.js';
 export {

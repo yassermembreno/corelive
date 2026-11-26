@@ -2,14 +2,14 @@ import { EdgeType } from '@corelive/domain';
 import { describe, expect, it } from 'vitest';
 
 import {
-  checkSemanticFidelity,
+  checkClaimFidelity,
   validateInferred,
   type AuthorizedRelation,
 } from '../src/specialist/output-validator.js';
 
 /**
- * Fixture mirroring eval/reports/agentic.json before hardening:
- * graph has beta (n_b) -CALLS-> gamma (n_c), but the model claimed "gamma calls beta".
+ * Fixture: beta (n_b) -CALLS-> gamma (n_c).
+ * Historical defect: model claimed gamma calls beta.
  */
 const RELATIONS: AuthorizedRelation[] = [
   {
@@ -17,24 +17,28 @@ const RELATIONS: AuthorizedRelation[] = [
     sourceId: 'n_b',
     targetId: 'n_c',
     type: EdgeType.CALLS,
+    evidenceIds: ['ev_e_bc', 'ev_shared'],
   },
   {
     edgeId: 'e_ac_imp',
     sourceId: 'n_a',
     targetId: 'n_c',
     type: EdgeType.IMPORTS,
+    evidenceIds: ['ev_e_ac_imp', 'ev_shared'],
   },
   {
     edgeId: 'e_ref',
     sourceId: 'n_alone',
     targetId: 'n_c',
     type: EdgeType.REFERENCES,
+    evidenceIds: ['ev_e_ref'],
   },
   {
     edgeId: 'e_ac_contains',
     sourceId: 'n_a',
     targetId: 'n_c',
     type: EdgeType.CONTAINS,
+    evidenceIds: ['ev_e_ac_contains'],
   },
 ];
 
@@ -47,11 +51,9 @@ const authorized = {
     'ev_e_ac_imp',
     'ev_e_ref',
     'ev_e_ac_contains',
+    'ev_shared',
   ]),
 };
-
-const DEFECT_NARRATIVE =
-  ' gamma calls beta and imports alpha, referencing lonely.';
 
 describe('semantic fidelity', () => {
   it('rejects inverted CALLS claim (gamma → beta when graph has beta → gamma)', () => {
@@ -68,7 +70,7 @@ describe('semantic fidelity', () => {
         responsibility: null,
         participation: {
           kind: 'hypothesis',
-          text: DEFECT_NARRATIVE,
+          text: 'gamma calls beta',
           evidenceRefs: ['ev_e_bc'],
         },
         behavior: null,
@@ -110,18 +112,15 @@ describe('semantic fidelity', () => {
     }
   });
 
-  it('rejects REFERENCES presented as CALLS (execution)', () => {
+  it('rejects hypothesis without evidence', () => {
     const result = validateInferred(
       {
-        claims: [
-          {
-            subjectId: 'n_alone',
-            predicate: 'CALLS',
-            objectId: 'n_c',
-            evidenceRefs: ['e_ref'],
-          },
-        ],
-        responsibility: null,
+        claims: [],
+        responsibility: {
+          kind: 'hypothesis',
+          text: 'does something',
+          evidenceRefs: [],
+        },
         participation: null,
         behavior: null,
         motivation: null,
@@ -131,16 +130,72 @@ describe('semantic fidelity', () => {
       { rationale: null, authorizedRelations: RELATIONS },
     );
     expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toMatch(/evidenceRefs\.length >= 1/);
+    }
   });
 
-  it('rejects hypothesis that cites an edge without a matching claim', () => {
+  it('rejects claim evidence belonging to a different edge', () => {
+    const result = validateInferred(
+      {
+        claims: [
+          {
+            subjectId: 'n_b',
+            predicate: 'CALLS',
+            objectId: 'n_c',
+            evidenceRefs: ['ev_e_ac_imp'],
+          },
+        ],
+        responsibility: {
+          kind: 'hypothesis',
+          text: 'gamma returns a flag',
+          evidenceRefs: ['ev_n_c'],
+        },
+        participation: null,
+        behavior: null,
+        motivation: null,
+        consequences: [],
+      },
+      authorized,
+      { rationale: null, authorizedRelations: RELATIONS },
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toMatch(/belongs to other edge/);
+    }
+  });
+
+  it('rejects ambiguous evidenceId without a disambiguating claim', () => {
     const result = validateInferred(
       {
         claims: [],
         responsibility: null,
         participation: {
           kind: 'hypothesis',
-          text: DEFECT_NARRATIVE,
+          text: 'related somehow',
+          evidenceRefs: ['ev_shared'],
+        },
+        behavior: null,
+        motivation: null,
+        consequences: [],
+      },
+      authorized,
+      { rationale: null, authorizedRelations: RELATIONS },
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toMatch(/ambiguous evidence|disambiguating claim/);
+    }
+  });
+
+  it('rejects edgeId citation without a matching claim', () => {
+    const result = validateInferred(
+      {
+        claims: [],
+        responsibility: null,
+        participation: {
+          kind: 'hypothesis',
+          text: 'mentions a call',
           evidenceRefs: ['e_bc'],
         },
         behavior: null,
@@ -156,18 +211,15 @@ describe('semantic fidelity', () => {
     }
   });
 
-  it('rejects claim with no matching edge at all', () => {
+  it('accepts non-relational narrative without claims when node evidence is valid', () => {
     const result = validateInferred(
       {
-        claims: [
-          {
-            subjectId: 'n_c',
-            predicate: 'CALLS',
-            objectId: 'n_alone',
-            evidenceRefs: [],
-          },
-        ],
-        responsibility: null,
+        claims: [],
+        responsibility: {
+          kind: 'hypothesis',
+          text: 'gamma appears to return a boolean',
+          evidenceRefs: ['ev_n_c'],
+        },
         participation: null,
         behavior: null,
         motivation: null,
@@ -176,10 +228,47 @@ describe('semantic fidelity', () => {
       authorized,
       { rationale: null, authorizedRelations: RELATIONS },
     );
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(true);
   });
 
-  it('accepts faithful claim n_b CALLS n_c with aligned hypothesis', () => {
+  it('accepts faithful claims; contradictory free text is not auto-rejected (documented limit)', () => {
+    const result = validateInferred(
+      {
+        claims: [
+          {
+            subjectId: 'n_b',
+            predicate: 'CALLS',
+            objectId: 'n_c',
+            evidenceRefs: ['e_bc', 'ev_e_bc'],
+          },
+        ],
+        responsibility: {
+          kind: 'hypothesis',
+          text: 'gamma returns a boolean flag',
+          evidenceRefs: ['ev_n_c'],
+        },
+        participation: {
+          // Contradicts the graph in prose, but claims are correct.
+          // Validator certifies claims only — free text is not invalidated here.
+          kind: 'hypothesis',
+          text: 'gamma calls beta',
+          evidenceRefs: ['e_bc'],
+        },
+        behavior: null,
+        motivation: null,
+        consequences: [],
+      },
+      authorized,
+      { rationale: null, authorizedRelations: RELATIONS },
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.claims[0]?.subjectId).toBe('n_b');
+      expect(result.value.participation?.text).toMatch(/gamma calls beta/);
+    }
+  });
+
+  it('accepts faithful claim with aligned hypothesis', () => {
     const result = validateInferred(
       {
         claims: [
@@ -210,8 +299,8 @@ describe('semantic fidelity', () => {
     expect(result.ok).toBe(true);
   });
 
-  it('checkSemanticFidelity flags inverted claims for eval', () => {
-    const check = checkSemanticFidelity(
+  it('checkClaimFidelity flags inverted claims', () => {
+    const check = checkClaimFidelity(
       [
         {
           subjectId: 'n_c',

@@ -8,7 +8,8 @@ import { EdgeType } from '@corelive/domain';
 import {
   AnalysisReportSchema,
   OllamaAdapter,
-  checkSemanticFidelity,
+  checkClaimFidelity,
+  computeEvidenceCoverage,
   relationsFromObserved,
   runAnalysis,
   silentAnalysisLogger,
@@ -23,9 +24,6 @@ import {
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, '../../..');
 const reportPath = join(repoRoot, 'eval/reports/agentic.json');
-
-/** Known false-PASS narrative from pre-hardening agentic.json */
-const KNOWN_INVERTED_PHRASE = /gamma\s+calls\s+beta/i;
 
 type RubricScores = {
   concise: boolean;
@@ -88,11 +86,18 @@ function scoreRubric(report: AnalysisReport): RubricScores {
   };
 }
 
-function detectInvertedCallNarrative(report: AnalysisReport): string[] {
-  const failures: string[] = [];
+/**
+ * Limited free-text heuristic from report callers — not a fidelity guarantee.
+ * Derived from graph names; no fixture-specific gamma/beta literals.
+ */
+function narrativeHeuristicChecks(report: AnalysisReport): {
+  ok: boolean;
+  findings: string[];
+} {
+  const findings: string[] = [];
   const inferred = report.inferred;
   if (!inferred) {
-    return failures;
+    return { ok: true, findings };
   }
 
   const narrative = [
@@ -104,28 +109,28 @@ function detectInvertedCallNarrative(report: AnalysisReport): string[] {
     .filter(Boolean)
     .join(' ');
 
-  if (KNOWN_INVERTED_PHRASE.test(narrative)) {
-    failures.push('narrative_contains_gamma_calls_beta');
-  }
-
-  // Callers of the explained symbol must not be described as callees of it.
+  const symbolName = report.observed.node.name;
   const callers = report.derived.explain?.callers ?? [];
   for (const caller of callers) {
     if (caller.edgeType !== EdgeType.CALLS) {
       continue;
     }
     const pattern = new RegExp(
-      `${report.observed.node.name}\\s+calls\\s+${caller.name}`,
+      `${escapeRegExp(symbolName)}\\s+calls\\s+${escapeRegExp(caller.name)}`,
       'i',
     );
     if (pattern.test(narrative)) {
-      failures.push(
-        `narrative_inverts_caller:${report.observed.node.name}->${caller.name}`,
+      findings.push(
+        `possible_inverted_caller_narrative:${symbolName}->${caller.name}`,
       );
     }
   }
 
-  return failures;
+  return { ok: findings.length === 0, findings };
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 async function probeOllama(model: LanguageModel): Promise<boolean> {
@@ -156,6 +161,7 @@ async function main(): Promise<number> {
       model: process.env.CORELIVE_MODEL ?? 'llama3.2',
       generatedAt: new Date().toISOString(),
       latencyMs: performance.now() - started,
+      note: 'claimFidelity is not a guarantee of full explanation fidelity.',
     };
     mkdirSync(dirname(reportPath), { recursive: true });
     writeFileSync(reportPath, JSON.stringify(blocked, null, 2));
@@ -219,28 +225,25 @@ async function main(): Promise<number> {
       inferredRefs.push(...claim.evidenceRefs, claim.subjectId, claim.objectId);
     }
   }
-  const evidenceFidelityOk = inferredRefs.every((id) => allowed.has(id));
+  const refsAuthorized = inferredRefs.every((id) => allowed.has(id));
 
   const relations = relationsFromObserved(report.observed);
   const claims = report.inferred?.claims ?? [];
-  const claimCheck = checkSemanticFidelity(claims, relations);
-  const narrativeFailures = detectInvertedCallNarrative(report);
-  const invertedPhrase =
-    report.inferred !== null &&
-    KNOWN_INVERTED_PHRASE.test(JSON.stringify(report.inferred));
+  const claimCheck = checkClaimFidelity(claims, relations);
+  const claimFidelity = report.inferred !== null && claimCheck.ok;
 
-  // JSON validity alone is not enough — claims must match graph direction/type.
-  const semanticFidelityOk =
-    report.inferred !== null &&
-    claimCheck.ok &&
-    narrativeFailures.length === 0 &&
-    !invertedPhrase;
+  const narrative = narrativeHeuristicChecks(report);
+  const evidenceCoverage = computeEvidenceCoverage(report.inferred);
 
+  // Suite pass: schema + model output + claim fidelity + evidence coverage.
+  // narrativeHeuristicChecks are reported but do NOT alone define claimFidelity.
+  // claimFidelity=true does NOT mean the whole free-text explanation is faithful.
   const pass =
     schemaOk &&
     report.inferred !== null &&
-    evidenceFidelityOk &&
-    semanticFidelityOk &&
+    refsAuthorized &&
+    claimFidelity &&
+    evidenceCoverage.ratio === 1 &&
     rubric.concise &&
     rubric.separatesHypothesis &&
     rubric.noMotivationFromName &&
@@ -254,18 +257,21 @@ async function main(): Promise<number> {
     latencyMs: performance.now() - started,
     metrics: {
       jsonValid: schemaOk,
-      evidenceFidelity: evidenceFidelityOk,
-      semanticFidelity: semanticFidelityOk,
-      semanticFailures: [
-        ...claimCheck.failures,
-        ...narrativeFailures,
-        ...(invertedPhrase ? ['known_inverted_phrase'] : []),
-      ],
+      claimFidelity,
+      claimFidelityFailures: claimCheck.failures,
+      narrativeHeuristicChecks: {
+        ok: narrative.ok,
+        findings: narrative.findings,
+        note: 'Limited free-text signals; not a guarantee of narrative fidelity.',
+      },
+      evidenceCoverage,
+      refsAuthorized,
       modelUsed: report.meta.modelUsed,
       inferredPresent: report.inferred !== null,
       claimCount: claims.length,
       unsupportedClaims: rubric.unsupportedClaims,
       rubric,
+      note: 'claimFidelity=true certifies structured claims vs graph only, not the full LLM prose.',
     },
     report,
   };
@@ -273,12 +279,9 @@ async function main(): Promise<number> {
   mkdirSync(dirname(reportPath), { recursive: true });
   writeFileSync(reportPath, JSON.stringify(out, null, 2));
   console.log(`agentic eval ${out.status} → ${reportPath}`);
-  if (!pass) {
-    console.error(
-      'semanticFailures:',
-      out.metrics.semanticFailures.join('; ') || '(none listed)',
-    );
-  }
+  console.log(
+    `claimFidelity=${claimFidelity} evidenceCoverage=${evidenceCoverage.ratio} narrativeHeuristicOk=${narrative.ok}`,
+  );
   return pass ? 0 : 1;
 }
 

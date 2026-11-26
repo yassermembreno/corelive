@@ -1,16 +1,26 @@
 {
   "suite": "agentic",
   "status": "passed",
-  "generatedAt": "2026-11-22T01:53:13.089Z",
-  "latencyMs": 7143.63425,
+  "generatedAt": "2026-11-26T21:55:18.371Z",
+  "latencyMs": 6339.548209,
   "metrics": {
     "jsonValid": true,
-    "evidenceFidelity": true,
-    "semanticFidelity": true,
-    "semanticFailures": [],
+    "claimFidelity": true,
+    "claimFidelityFailures": [],
+    "narrativeHeuristicChecks": {
+      "ok": true,
+      "findings": [],
+      "note": "Limited free-text signals; not a guarantee of narrative fidelity."
+    },
+    "evidenceCoverage": {
+      "hypothesisCount": 3,
+      "withEvidence": 3,
+      "ratio": 1
+    },
+    "refsAuthorized": true,
     "modelUsed": true,
     "inferredPresent": true,
-    "claimCount": 1,
+    "claimCount": 3,
     "unsupportedClaims": [],
     "rubric": {
       "concise": true,
@@ -19,7 +29,8 @@
       "noImportAsBehavior": true,
       "noPathAsFailure": true,
       "unsupportedClaims": []
-    }
+    },
+    "note": "claimFidelity=true certifies structured claims vs graph only, not the full LLM prose."
   },
   "report": {
     "operation": "explain",
@@ -154,27 +165,42 @@
           "evidenceRefs": [
             "ev_e_bc"
           ]
+        },
+        {
+          "subjectId": "n_a",
+          "predicate": "IMPORTS",
+          "objectId": "n_c",
+          "evidenceRefs": [
+            "ev_e_ac_imp"
+          ]
+        },
+        {
+          "subjectId": "n_alone",
+          "predicate": "REFERENCES",
+          "objectId": "n_c",
+          "evidenceRefs": [
+            "ev_e_ref"
+          ]
         }
       ],
       "responsibility": {
         "kind": "hypothesis",
-        "text": "beta calls gamma",
+        "text": " gamma is called by beta",
         "evidenceRefs": [
           "ev_e_bc"
         ]
       },
       "participation": {
         "kind": "hypothesis",
-        "text": "beta is a caller of gamma",
+        "text": " beta calls gamma",
         "evidenceRefs": [
           "ev_e_bc"
         ]
       },
       "behavior": {
         "kind": "hypothesis",
-        "text": "gamma is a function called by beta",
+        "text": "gamma invokes beta",
         "evidenceRefs": [
-          "ev_e_ac_contains",
           "ev_e_bc"
         ]
       },
@@ -198,7 +224,7 @@
     "meta": {
       "modelUsed": true,
       "promptVersion": "v1",
-      "latencyMs": 4406
+      "latencyMs": 3544
     }
   }
 }

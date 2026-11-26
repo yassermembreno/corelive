@@ -2,6 +2,7 @@ import { EdgeType } from '@corelive/domain';
 
 import {
   InferredBlockSchema,
+  type Hypothesis,
   type InferredBlock,
   type RelationClaim,
 } from '../contracts/analysis-report.js';
@@ -17,14 +18,16 @@ export type AuthorizedRelation = {
   sourceId: string;
   targetId: string;
   type: EdgeType;
+  /** Evidence record ids attached to this edge in the observed graph. */
+  evidenceIds: string[];
 };
 
 export type ValidationResult =
   | { ok: true; value: InferredBlock }
   | { ok: false; reason: string };
 
-function collectHypothesisRefs(block: InferredBlock): string[] {
-  const refs: string[] = [];
+function hypothesesOf(block: InferredBlock): Hypothesis[] {
+  const list: Hypothesis[] = [];
   for (const field of [
     block.responsibility,
     block.participation,
@@ -32,11 +35,17 @@ function collectHypothesisRefs(block: InferredBlock): string[] {
     block.motivation,
   ]) {
     if (field) {
-      refs.push(...field.evidenceRefs);
+      list.push(field);
     }
   }
-  for (const item of block.consequences) {
-    refs.push(...item.evidenceRefs);
+  list.push(...block.consequences);
+  return list;
+}
+
+function collectAllRefs(block: InferredBlock): string[] {
+  const refs: string[] = [];
+  for (const h of hypothesesOf(block)) {
+    refs.push(...h.evidenceRefs);
   }
   for (const claim of block.claims) {
     refs.push(...claim.evidenceRefs);
@@ -100,10 +109,35 @@ function findInvertedRelation(
   );
 }
 
+/** Build evidenceId → Set&lt;edgeId&gt; from authorized relations. */
+export function buildEvidenceToEdgesIndex(
+  relations: readonly AuthorizedRelation[],
+): Map<string, Set<string>> {
+  const index = new Map<string, Set<string>>();
+  for (const rel of relations) {
+    for (const evId of rel.evidenceIds) {
+      const set = index.get(evId) ?? new Set<string>();
+      set.add(rel.edgeId);
+      index.set(evId, set);
+    }
+  }
+  return index;
+}
+
+function validateHypothesesHaveEvidence(block: InferredBlock): string | null {
+  for (const h of hypothesesOf(block)) {
+    if (h.evidenceRefs.length < 1) {
+      return 'Non-null hypothesis requires evidenceRefs.length >= 1';
+    }
+  }
+  return null;
+}
+
 function validateClaims(
   claims: RelationClaim[],
   relations: readonly AuthorizedRelation[],
   authorized: AuthorizedIds,
+  evidenceToEdges: Map<string, Set<string>>,
 ): string | null {
   const allowed = new Set<string>([
     ...authorized.nodeIds,
@@ -148,8 +182,16 @@ function validateClaims(
       );
     }
 
-    if (!byTriple.has(relationKey(claim.subjectId, claim.predicate, claim.objectId))) {
+    if (
+      !byTriple.has(
+        relationKey(claim.subjectId, claim.predicate, claim.objectId),
+      )
+    ) {
       return `Claim not in authorized graph: ${claim.subjectId} ${claim.predicate} ${claim.objectId}`;
+    }
+
+    if (claim.evidenceRefs.length < 1) {
+      return `Relation claim requires evidenceRefs for ${claim.subjectId} ${claim.predicate} ${claim.objectId}`;
     }
 
     for (const ref of claim.evidenceRefs) {
@@ -161,6 +203,12 @@ function validateClaims(
           `Claim evidence edge ${ref} does not match relation edge ${match.edgeId}`
         );
       }
+      const linkedEdges = evidenceToEdges.get(ref);
+      if (linkedEdges && linkedEdges.size > 0 && !linkedEdges.has(match.edgeId)) {
+        return (
+          `Claim evidence ${ref} belongs to other edge(s), not ${match.edgeId}`
+        );
+      }
     }
   }
 
@@ -168,11 +216,14 @@ function validateClaims(
 }
 
 /**
- * If hypotheses cite edge ids, require a matching claim for each cited edge.
+ * Relational refs (edgeId or evidenceId tied to edges) require covering claims.
+ * Node-only evidence does not force claims — narrative may be non-relational.
  */
-function validateHypothesisEdgeCoverage(
+function validateRelationalRefCoverage(
   block: InferredBlock,
   relations: readonly AuthorizedRelation[],
+  authorized: AuthorizedIds,
+  evidenceToEdges: Map<string, Set<string>>,
 ): string | null {
   const edgeById = new Map(relations.map((r) => [r.edgeId, r]));
   const claimedEdges = new Set<string>();
@@ -183,24 +234,51 @@ function validateHypothesisEdgeCoverage(
     }
   }
 
-  const hypoRefs = collectHypothesisRefs({
-    ...block,
-    claims: [],
-  });
+  const hypoRefs: string[] = [];
+  for (const h of hypothesesOf(block)) {
+    hypoRefs.push(...h.evidenceRefs);
+  }
 
   for (const ref of hypoRefs) {
-    const edge = edgeById.get(ref);
-    if (!edge) {
+    if (edgeById.has(ref)) {
+      if (!claimedEdges.has(ref)) {
+        const edge = edgeById.get(ref)!;
+        return (
+          `Hypothesis cites edge ${ref} without a matching claim ` +
+          `(${edge.sourceId} ${edge.type} ${edge.targetId})`
+        );
+      }
       continue;
     }
-    if (!claimedEdges.has(edge.edgeId)) {
+
+    const linked = evidenceToEdges.get(ref);
+    if (!linked || linked.size === 0) {
+      // Node/doc evidence — non-relational narrative OK without claims.
+      continue;
+    }
+
+    if (linked.size === 1) {
+      const only = [...linked][0]!;
+      if (!claimedEdges.has(only)) {
+        return (
+          `Hypothesis cites evidence ${ref} for edge ${only} without a matching claim`
+        );
+      }
+      continue;
+    }
+
+    // evidenceId maps to multiple edges — claim must disambiguate.
+    const covered = [...linked].filter((id) => claimedEdges.has(id));
+    if (covered.length === 0) {
       return (
-        `Hypothesis cites edge ${ref} without a matching claim ` +
-        `(${edge.sourceId} ${edge.type} ${edge.targetId})`
+        `Hypothesis cites ambiguous evidence ${ref} linked to edges ` +
+        `${[...linked].sort().join(', ')} without a disambiguating claim`
       );
     }
   }
 
+  // Claim evidence refs already checked in validateClaims.
+  void authorized;
   return null;
 }
 
@@ -226,13 +304,18 @@ export function validateInferred(
     };
   }
 
+  const evidenceError = validateHypothesesHaveEvidence(value);
+  if (evidenceError) {
+    return { ok: false, reason: evidenceError };
+  }
+
   const allowed = new Set<string>([
     ...authorized.nodeIds,
     ...authorized.edgeIds,
     ...authorized.evidenceIds,
   ]);
 
-  for (const ref of collectHypothesisRefs(value)) {
+  for (const ref of collectAllRefs(value)) {
     if (!allowed.has(ref)) {
       return {
         ok: false,
@@ -242,12 +325,24 @@ export function validateInferred(
   }
 
   const relations = options.authorizedRelations ?? [];
+  const evidenceToEdges = buildEvidenceToEdgesIndex(relations);
+
   if (relations.length > 0 || value.claims.length > 0) {
-    const claimError = validateClaims(value.claims, relations, authorized);
+    const claimError = validateClaims(
+      value.claims,
+      relations,
+      authorized,
+      evidenceToEdges,
+    );
     if (claimError) {
       return { ok: false, reason: claimError };
     }
-    const coverageError = validateHypothesisEdgeCoverage(value, relations);
+    const coverageError = validateRelationalRefCoverage(
+      value,
+      relations,
+      authorized,
+      evidenceToEdges,
+    );
     if (coverageError) {
       return { ok: false, reason: coverageError };
     }
@@ -263,19 +358,21 @@ export function parseModelJson(text: string): unknown {
   return JSON.parse(candidate) as unknown;
 }
 
-/** Build authorized relations from observed structure (endpoints + type). */
+/** Build authorized relations from observed structure (endpoints + type + evidence). */
 export function relationsFromObserved(observed: {
   localStructure: Array<{
     edgeId: string;
     sourceId: string;
     targetId: string;
     type: EdgeType;
+    evidence?: Array<{ id: string }>;
   }>;
   incidentRelations: Array<{
     edgeId: string;
     sourceId: string;
     targetId: string;
     type: EdgeType;
+    evidence?: Array<{ id: string }>;
   }>;
 }): AuthorizedRelation[] {
   const map = new Map<string, AuthorizedRelation>();
@@ -283,12 +380,23 @@ export function relationsFromObserved(observed: {
     ...observed.localStructure,
     ...observed.incidentRelations,
   ]) {
-    map.set(rel.edgeId, {
-      edgeId: rel.edgeId,
-      sourceId: rel.sourceId,
-      targetId: rel.targetId,
-      type: rel.type,
-    });
+    const evidenceIds = (rel.evidence ?? [])
+      .map((e) => e.id)
+      .filter(Boolean)
+      .sort();
+    const existing = map.get(rel.edgeId);
+    if (existing) {
+      const merged = new Set([...existing.evidenceIds, ...evidenceIds]);
+      existing.evidenceIds = [...merged].sort();
+    } else {
+      map.set(rel.edgeId, {
+        edgeId: rel.edgeId,
+        sourceId: rel.sourceId,
+        targetId: rel.targetId,
+        type: rel.type,
+        evidenceIds,
+      });
+    }
   }
   return [...map.values()].sort((a, b) =>
     a.edgeId < b.edgeId ? -1 : a.edgeId > b.edgeId ? 1 : 0,
@@ -296,13 +404,14 @@ export function relationsFromObserved(observed: {
 }
 
 /**
- * Check structured claims against authorized relations (eval / runtime).
+ * Check structured claims against authorized relations (eval claimFidelity).
  */
-export function checkSemanticFidelity(
+export function checkClaimFidelity(
   claims: RelationClaim[],
   relations: readonly AuthorizedRelation[],
 ): { ok: boolean; failures: string[] } {
   const failures: string[] = [];
+  const evidenceToEdges = buildEvidenceToEdgesIndex(relations);
   for (const claim of claims) {
     const match = findMatchingRelation(claim, relations);
     if (!match) {
@@ -316,7 +425,37 @@ export function checkSemanticFidelity(
           `missing:${claim.subjectId}-${claim.predicate}->${claim.objectId}`,
         );
       }
+      continue;
+    }
+    for (const ref of claim.evidenceRefs) {
+      if (ref !== match.edgeId && relations.some((r) => r.edgeId === ref)) {
+        failures.push(`wrong_edge_evidence:${ref}!=${match.edgeId}`);
+      }
+      const linked = evidenceToEdges.get(ref);
+      if (linked && linked.size > 0 && !linked.has(match.edgeId)) {
+        failures.push(`evidence_other_edge:${ref}`);
+      }
     }
   }
   return { ok: failures.length === 0, failures };
+}
+
+/** @deprecated Use checkClaimFidelity — kept as alias for existing imports. */
+export const checkSemanticFidelity = checkClaimFidelity;
+
+export function computeEvidenceCoverage(block: InferredBlock | null): {
+  hypothesisCount: number;
+  withEvidence: number;
+  ratio: number;
+} {
+  if (!block) {
+    return { hypothesisCount: 0, withEvidence: 0, ratio: 1 };
+  }
+  const hypos = hypothesesOf(block);
+  const withEvidence = hypos.filter((h) => h.evidenceRefs.length >= 1).length;
+  return {
+    hypothesisCount: hypos.length,
+    withEvidence,
+    ratio: hypos.length === 0 ? 1 : withEvidence / hypos.length,
+  };
 }

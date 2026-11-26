@@ -42,7 +42,7 @@ describe('validateInferred', () => {
         motivation: {
           kind: 'hypothesis',
           text: 'Because the name says so',
-          evidenceRefs: [],
+          evidenceRefs: ['ev1'],
         },
         consequences: [],
       },
